@@ -1,0 +1,19 @@
+Name:              intervals
+Version:           0.0.1
+Synopsis:          Interval Arithmetic
+Homepage:          http://patch-tag.com/r/ekmett/intervals
+License:           BSD3
+License-file:      LICENSE
+Author:            Edward Kmett
+Maintainer:        ekmett@gmail.com
+Category:          Math
+Build-type:        Simple
+Cabal-version:     >=1.6
+
+Library
+  Exposed-modules: Numeric.Interval
+  Build-depends:   base >= 4 && < 5,
+                   array >= 0.3.0 && < 0.4,
+                   numeric-extras >= 0.0.1 && < 0.1,
+                   rounding >= 0.3.0 && < 0.4
+  GHC-Options:     -Wall
