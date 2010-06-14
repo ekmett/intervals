@@ -28,8 +28,12 @@ module Numeric.Interval
     , bisection
     , magnitude
     , mignitude
+    , contains
+    , isSubsetOf
     , certainly, (<!), (<=!), (==!), (>=!), (>!)
     , possibly, (<?), (<=?), (==?), (>=?), (>?)
+    , idouble 
+    , ifloat 
     ) where
 
 import Prelude hiding (null, elem, notElem)
@@ -37,7 +41,7 @@ import Numeric.Extras
 import Numeric.Rounding
 import Data.Function (on)
 
-data Interval a = I (Round Down a) (Round Up a)
+data Interval a = I !(Round Down a) !(Round Up a)
 
 infix 3 ...
 
@@ -118,16 +122,18 @@ d (Round a) = Round a
 -- | Calculate the width of an interval.
 -- N.B. the width of an interval is an interval itself due to rounding
 width :: Precision a => Interval a -> Interval a
-width x@(I a b) = I (d b - a) (b - u a)
+width (I a b) = I (d b - a) (b - u a)
 {-# INLINE width #-}
 
 -- | magnitude 
 magnitude :: Precision a => Interval a -> a 
 magnitude x = (max `on` abs) (inf x) (sup x)
+{-# INLINE magnitude #-}
 
 -- | "mignitude"
 mignitude :: Precision a => Interval a -> a 
 mignitude x = (min `on` abs) (inf x) (sup x)
+{-# INLINE mignitude #-}
 
 instance Precision a => Num (Interval a) where
     I a b + I a' b' = I (a + a') (b + b')
@@ -153,7 +159,6 @@ bisection (I a b) = (I a (u a + (b - u a) / 2), I (a + (d b - a) / 2) b)
 midpoint :: Precision a => Interval a -> a
 midpoint x = inf x + (sup x - inf x) / 2
 {-# INLINE midpoint #-}
-
 
 elem :: Precision a => a -> Interval a -> Bool
 elem x xs = x >= inf xs && x <= sup xs
@@ -198,7 +203,7 @@ divZero x | inf x == 0 && sup x == 0 = x
 
 instance Precision a => Fractional (Interval a) where
     -- TODO: check isNegativeZero properly
-    x@(I a b) / y@(I a' b')
+    x / y
         | 0 `notElem` y = divNonZero x y 
         | iz && sz  = empty -- division by 0
         | iz        = divPositive x (inf y)
@@ -221,23 +226,82 @@ instance Precision a => RealFrac (Interval a) where
 
 instance Precision a => Floating (Interval a) where
     pi = pi `I` pi 
-    exp (I a b) = exp a `I` exp b
-    log (I a b) = (if a > 0 then log a else -1/0) `I` log b
+    exp = increasing exp
+    log (I a b) = (if a > 0 then log a else negInfinity) `I` log b
     cos x 
+        | null x = empty
         | inf (width t) >= inf pi = (-1) ... 1
-        | u tl >= pih  = - cos (t - pi)
-        | d th <= pil  = cos (d th) `I` cos (u tl)
-        | d th <= pi2l = (-1) `I` cos (u (min (pi2l - d th) tl))
+        | tl >= d pih  = - cos (t - pi)
+        | th <= u pil  = cos (d th) `I` cos (u tl)
+        | th <= u pi2l = (-1) `I` cos (u (min (pi2l - d th) tl))
         | otherwise  = (-1) ... 1
         where 
             I pil pih = pi
-            pi2@(I pi2l pi2h) = pi * 2
+            pi2@(I pi2l _) = pi * 2
             t@(I tl th) = x `fmod` pi2
-            l = inf t
-            h = sup t
-    sin x = cos (x - pi / 2)
+    sin x 
+        | null x = empty
+        | otherwise = cos (x - pi / 2)
+    tan x 
+        | null x = empty
+        | inf t' <= -hpil || sup t' >= hpil = whole
+        | otherwise = increasing tan x
+        where
+            t = x `fmod` pi 
+            t' | inf t >= hpil = t - pi
+               | otherwise = t
+            hpil = inf (pi / 2)
+    asin x@(I a b)
+        | null x || b < -1 || a > 1 = empty
+        | otherwise = 
+            (if a <= - 1 then - d hpis else asin a)
+            `I`
+            (if b >= 1 then hpis else asin b)
+        where
+            I _ hpis = pi / 2
+    acos x@(I a b)
+        | null x || b < -1 || a > 1 = empty
+        | otherwise = 
+            (if b >= 1 then 0 else acos (d b))
+            `I`
+            (if a < -1 then pis else acos (u a))
+        where
+            I _ pis = pi
+    atan = increasing atan
+    sinh = increasing sinh
+    cosh x@(I a b)
+        | null x = empty
+        | b < 0  = decreasing cosh x
+        | a >= 0 = increasing cosh x
+        | otherwise  = I 0 $ cosh $ if - u a > b
+                                    then u a 
+                                    else b
+    tanh = increasing tanh
+    asinh = increasing asinh
+    acosh x@(I a b)
+        | null x || b < 1 = empty -- acosh is only defined on [1..1/0)
+        | otherwise = I lo $ acosh b
+        where lo | a <= 1 = 0 
+                 | otherwise = acosh a
+    atanh x@(I a b)
+        | null x || b < -1 || a > 1 = empty
+        | otherwise =
+                (if a <= - 1 then negInfinity else atanh a)
+                `I`
+                (if b >= 1 then posInfinity else atanh b)
     
-        
+-- | lift a monotone increasing function over a given interval 
+increasing :: Precision a => 
+         (forall d. Rounding d => Round d a -> Round d a) -> 
+         Interval a -> Interval a
+increasing f (I a b) = I (f a) (f b)
+
+-- | lift a monotone increasing function over a given interval 
+decreasing :: Precision a => 
+         (forall d. Rounding d => Round d a -> Round d a) -> 
+         Interval a -> Interval a
+decreasing f (I a b) = I (f (d b)) (f (u a))
+
 
 -- | We have to play some semantic games to make these methods make sense.
 -- Most compute with the midpoint of the interval.
@@ -250,7 +314,7 @@ instance Precision a => RealFloat (Interval a) where
     exponent = exponent . midpoint
     significand x = min a b ... max a b
         where
-            (mm,em) = decodeFloat (midpoint x)
+            (_ ,em) = decodeFloat (midpoint x)
             (mi,ei) = decodeFloat (inf x)
             (ms,es) = decodeFloat (sup x)
             a = encodeFloat mi (ei - em - floatDigits x) 
@@ -265,6 +329,7 @@ instance Precision a => RealFloat (Interval a) where
                     && (  (sup x == 0 && (inf x < 0 || isNegativeZero (inf x)))
                        || (inf x == 0 && isNegativeZero (inf x)) 
                        || (inf x < 0 && sup x >= 0))
+    isIEEE x = isIEEE (inf x) && isIEEE (sup x)
     atan2 = error "unimplemented"
 
 -- TODO: (^), (^^) to give tighter bounds
@@ -286,14 +351,22 @@ instance Precision a => RealExtras (Interval a) where
     type C (Interval a) = C a
     -- output always lies within the interval y if y >=! 0
     fmod x y | null y = empty 
-             | inf y >= 0 = r -- `intersection` bounds
+             | otherwise = r -- `intersection` bounds
         where 
+            n :: Integer
             n = floor (inf x / if inf x < 0 then inf y else sup y)
             r = x - fromIntegral n * y 
-            bounds | inf y >= 0 = y
-                   | otherwise = y `hull` negate y
-    
-    
+            -- bounds | inf y >= 0 = y
+            --        | otherwise = y `hull` negate y
+    expm1 = increasing expm1
+    log1p (I a b) = (if a > (-1) then log1p a else negInfinity) `I` log1p b
+    hypot x y = hypot a a' `I` hypot b b'
+        where
+            I a b = abs x
+            I a' b' = abs y
+    cbrt = increasing cbrt
+    erf = increasing erf
+
 -- | For all @x@ in @X@, @y@ in @Y@. @x '<' y@
 (<!)  :: Ord a => Interval a -> Interval a -> Bool
 x <! y = sup x < inf y
@@ -344,15 +417,16 @@ certainly cmp l r
 contains :: Ord a => Interval a -> Interval a -> Bool
 contains x y = null y 
             || (not (null x) && inf x <= inf y && sup y <= sup x)
+{-# INLINE contains #-}
+
+isSubsetOf :: Ord a => Interval a -> Interval a -> Bool
+isSubsetOf = flip contains
 
 -- | Comparisons are made on the midpoint
 instance Precision a => Ord (Interval a) where
     compare = compare `on` midpoint
     max (I a b) (I a' b') = I (max a a') (max b b')
     min (I a b) (I a' b') = I (min a a') (min b b')
-
-ambiguous :: String -> a
-ambiguous s = error $ s ++ ": ambiguous result"
 
 -- | Does there exist an @x@ in @X@, @y@ in @Y@ such that @x '<' y@?
 (<?) :: Ord a => Interval a -> Interval a -> Bool
@@ -401,3 +475,11 @@ possibly cmp l r
         gt = cmp GT EQ
 {-# INLINE possibly #-}
 
+idouble :: Interval Double -> Interval Double
+idouble = id
+
+ifloat :: Interval Float -> Interval Float
+ifloat = id
+
+-- Bugs:
+-- sin 1 :: Interval Double
