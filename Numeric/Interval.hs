@@ -17,6 +17,8 @@ module Numeric.Interval
     , empty
     , null
     , singleton
+    , elem
+    , notElem
     , inf
     , sup
     , singular
@@ -30,7 +32,7 @@ module Numeric.Interval
     , possibly, (<?), (<=?), (==?), (>=?), (>?)
     ) where
 
-import Prelude hiding (null)
+import Prelude hiding (null, elem, notElem)
 import Numeric.Extras
 import Numeric.Rounding
 import Data.Function (on)
@@ -38,6 +40,17 @@ import Data.Function (on)
 data Interval a = I (Round Down a) (Round Up a)
 
 infix 3 ...
+
+negInfinity :: Fractional a => a
+negInfinity = (-1)/0 
+{-# INLINE negInfinity #-}
+
+posInfinity :: Fractional a => a
+posInfinity = 1/0
+{-# INLINE posInfinity #-}
+
+nan :: Fractional a => a 
+nan = 0/0
 
 -- | The rule of thumb is you should only use this to construct using values
 -- that you took out of the interval. Otherwise, use I, to force rounding
@@ -47,12 +60,12 @@ a ... b = I (Round a) (Round b)
 
 -- | The whole real number line
 whole :: Precision a => Interval a 
-whole = (-1)/0 ... 1/0
+whole = negInfinity ... posInfinity
 {-# INLINE whole #-}
 
 -- | An empty interval
 empty :: Precision a => Interval a 
-empty = 0/0 ... 0/0
+empty = nan ... nan
 {-# INLINE empty #-}
 
 -- | negation handles NaN properly
@@ -141,14 +154,59 @@ midpoint :: Precision a => Interval a -> a
 midpoint x = inf x + (sup x - inf x) / 2
 {-# INLINE midpoint #-}
 
+
+elem :: Precision a => a -> Interval a -> Bool
+elem x xs = x >= inf xs && x <= sup xs
+{-# INLINE elem #-}
+
+notElem :: Precision a => a -> Interval a -> Bool
+notElem x xs = not (elem x xs)
+{-# INLINE notElem #-}
+
 -- | This means that realToFrac will use the midpoint
 instance Precision a => Real (Interval a) where
     toRational x = toRational (midpoint x)
 
+-- @'divNonZero' X Y@ assumes @0 `'notElem'` Y@
+divNonZero :: Precision a => Interval a -> Interval a -> Interval a 
+divNonZero (I a b) (I a' b') = 
+    minimum [a / a',a / d b',d b / a',d b / d b'] 
+    `I`
+    maximum [u a / u a',u a / b',b / u a',b / b']
+
+-- @'divPositive' X y@ assumes y > 0, and divides @X@ by [0 ... y]
+divPositive :: Precision a => Interval a -> a -> Interval a 
+divPositive x@(I a b) y
+    | a == 0 && b == 0 = x
+    | b < 0 || isNegativeZero b = negInfinity `I` ( b / up y)
+    | a < 0 = whole 
+ -- | isNegativeZero a = whole
+    | otherwise = (a / down y) `I` posInfinity
+
+-- divNegative assumes y < 0 and divides the interval @X@ by [y ... 0]
+divNegative :: Precision a => Interval a -> a -> Interval a
+divNegative x@(I a b) y
+    | a == 0 && b == 0 = - x -- flips negative zeros
+    | b < 0 || isNegativeZero b = (d b / down y) `I` posInfinity
+    | a < 0 = whole
+ -- | isNegativeZero a = whole
+    | otherwise = negInfinity `I` (u a / up y)
+
+divZero :: Precision a => Interval a -> Interval a
+divZero x | inf x == 0 && sup x == 0 = x
+          | otherwise = whole
+
 instance Precision a => Fractional (Interval a) where
-    I a b / I a' b' = minimum [a / a',a / d b',d b / a',d b / d b'] 
-                      `I`
-                      maximum [u a / u a',u a / b',b / u a',b / b']
+    -- TODO: check isNegativeZero properly
+    x@(I a b) / y@(I a' b')
+        | 0 `notElem` y = divNonZero x y 
+        | iz && sz  = empty -- division by 0
+        | iz        = divPositive x (inf y)
+        |       sz  = divNegative x (sup y)
+        | otherwise = divZero x
+        where 
+            iz = inf y == 0
+            sz = sup y == 0
     recip (I a b)   = on min recip a (d b) `I` on max recip (u a) b
     fromRational r  = fromRational r `I` fromRational r
 
@@ -177,6 +235,9 @@ instance Precision a => Floating (Interval a) where
             t@(I tl th) = x `fmod` pi2
             l = inf t
             h = sup t
+    sin x = cos (x - pi / 2)
+    
+        
 
 -- | We have to play some semantic games to make these methods make sense.
 -- Most compute with the midpoint of the interval.
