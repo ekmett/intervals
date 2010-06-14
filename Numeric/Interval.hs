@@ -14,6 +14,7 @@
 
 module Numeric.Interval 
     ( Interval(..)
+    , (...)
     , whole
     , empty
     , null
@@ -39,10 +40,9 @@ module Numeric.Interval
 
 import Prelude hiding (null, elem, notElem)
 import Numeric.Extras
-import Numeric.Rounding
 import Data.Function (on)
 
-data Interval a = I !(Round Down a) !(Round Up a)
+data Interval a = I !a !a
 
 infix 3 ...
 
@@ -60,16 +60,16 @@ nan = 0/0
 -- | The rule of thumb is you should only use this to construct using values
 -- that you took out of the interval. Otherwise, use I, to force rounding
 (...) :: a -> a -> Interval a 
-a ... b = I (Round a) (Round b)
+a ... b = I a b
 {-# INLINE (...) #-}
 
 -- | The whole real number line
-whole :: Precision a => Interval a 
+whole :: Fractional a => Interval a 
 whole = negInfinity ... posInfinity
 {-# INLINE whole #-}
 
 -- | An empty interval
-empty :: Precision a => Interval a 
+empty :: Fractional a => Interval a 
 empty = nan ... nan
 {-# INLINE empty #-}
 
@@ -85,12 +85,12 @@ singleton a = a ... a
 
 -- | The infinumum (lower bound) of an interval
 inf :: Interval a -> a
-inf (I (Round a) _) = a
+inf (I a _) = a
 {-# INLINE inf #-}
 
 -- | The supremum (upper bound) of an interval
 sup :: Interval a -> a
-sup (I _ (Round b)) = b
+sup (I _ b) = b
 {-# INLINE sup #-}
 
 -- | Is the interval a singleton point? 
@@ -100,109 +100,115 @@ singular :: Ord a => Interval a -> Bool
 singular x = not (null x) && inf x == sup x
 {-# INLINE singular #-}
 
-instance Precision a => Eq (Interval a) where
-    (==) = (==) `on` midpoint
+instance Eq a => Eq (Interval a) where
+    (==) = (==!) 
 
 instance Show a => Show (Interval a) where
-    showsPrec n (I (Round a) (Round b)) =   
+    showsPrec n (I a b) =   
         showParen (n > 3) $
             showsPrec 3 a .
             showString " ... " . 
             showsPrec 3 b
 
--- flip the rounding mode up
-u :: Round Down a -> Round Up a
-u (Round a) = Round a
-{-# INLINE u #-}
-
--- flip the rounding mode down
-d :: Round Up a -> Round Down a
-d (Round a) = Round a
-{-# INLINE d #-}
-
 -- | Calculate the width of an interval.
--- N.B. the width of an interval is an interval itself due to rounding
-width :: Precision a => Interval a -> Interval a
-width (I a b) = I (d b - a) (b - u a)
+width :: Num a => Interval a -> a
+width (I a b) = b - a
 {-# INLINE width #-}
 
 -- | magnitude 
-magnitude :: Precision a => Interval a -> a 
+magnitude :: (Num a, Ord a) => Interval a -> a 
 magnitude x = (max `on` abs) (inf x) (sup x)
 {-# INLINE magnitude #-}
 
 -- | "mignitude"
-mignitude :: Precision a => Interval a -> a 
+mignitude :: (Num a, Ord a) => Interval a -> a 
 mignitude x = (min `on` abs) (inf x) (sup x)
 {-# INLINE mignitude #-}
 
-instance Precision a => Num (Interval a) where
-    I a b + I a' b' = I (a + a') (b + b')
-    I a b - I a' b' = I (a - d b') (b - u a')
-    I a b * I a' b' = minimum [a * a',a * d b',d b * a',d b * d b'] 
-                      `I` 
-                      maximum [u a * u a',u a * b',b * u a',b * b']
+instance (Num a, Ord a) => Num (Interval a) where
+    I a b + I a' b' = (a + a') ... (b + b')
+    I a b - I a' b' = (a - b') ... (b - a')
+    I a b * I a' b' = minimum [a * a', a * b', b * a', b * b'] 
+                      ...
+                      maximum [a * a', a * b', b * a', b * b']
     abs x@(I a b) 
         | a >= 0    = x 
         | b <= 0    = negate x
-        | otherwise = max (- a) (d b) `I` b
+        | otherwise = max (- a) b ... b
 
-    signum (I a b)  = signum a `I` signum b
+    signum = increasing signum
 
-    fromInteger i   = fromInteger i `I` fromInteger i
+    fromInteger i = singleton (fromInteger i)
 
 -- | Bisect an interval at its midpoint.
-bisection :: Precision a => Interval a -> (Interval a, Interval a)
-bisection (I a b) = (I a (u a + (b - u a) / 2), I (a + (d b - a) / 2) b)
+bisection :: Fractional a => Interval a -> (Interval a, Interval a)
+bisection x = (inf x ... m, m ... sup x)
+    where m = midpoint x
 {-# INLINE bisection #-}
 
 -- | Nearest point to the midpoint of the interval.
-midpoint :: Precision a => Interval a -> a
+midpoint :: Fractional a => Interval a -> a
 midpoint x = inf x + (sup x - inf x) / 2
 {-# INLINE midpoint #-}
 
-elem :: Precision a => a -> Interval a -> Bool
+elem :: Ord a => a -> Interval a -> Bool
 elem x xs = x >= inf xs && x <= sup xs
 {-# INLINE elem #-}
 
-notElem :: Precision a => a -> Interval a -> Bool
+notElem :: Ord a => a -> Interval a -> Bool
 notElem x xs = not (elem x xs)
 {-# INLINE notElem #-}
 
 -- | This means that realToFrac will use the midpoint
-instance Precision a => Real (Interval a) where
-    toRational x = toRational (midpoint x)
+
+-- | What moron put an Ord instance requirement on Real!
+instance Real a => Real (Interval a) where
+    toRational x 
+        | null x   = nan
+        | otherwise = a + (b - a) / 2
+        where
+            a = toRational (inf x)
+            b = toRational (sup x)
+
+instance Ord a => Ord (Interval a) where
+    compare x y 
+        | sup x < inf y = LT
+        | inf x > sup y = GT
+        | sup x == inf y && inf x == sup y = EQ
+        | otherwise = error "Numeric.Interval.compare: ambiguous comparison"
+    min = minInterval
+    max = maxInterval
 
 -- @'divNonZero' X Y@ assumes @0 `'notElem'` Y@
-divNonZero :: Precision a => Interval a -> Interval a -> Interval a 
+divNonZero :: (Fractional a, Ord a) => Interval a -> Interval a -> Interval a 
 divNonZero (I a b) (I a' b') = 
-    minimum [a / a',a / d b',d b / a',d b / d b'] 
+    minimum [a / a', a / b', b / a', b / b'] 
     `I`
-    maximum [u a / u a',u a / b',b / u a',b / b']
+    maximum [a / a', a / b', b / a', b / b']
 
 -- @'divPositive' X y@ assumes y > 0, and divides @X@ by [0 ... y]
-divPositive :: Precision a => Interval a -> a -> Interval a 
+divPositive :: (Fractional a, Ord a) => Interval a -> a -> Interval a 
 divPositive x@(I a b) y
     | a == 0 && b == 0 = x
-    | b < 0 || isNegativeZero b = negInfinity `I` ( b / up y)
+    -- | b < 0 || isNegativeZero b = negInfinity `I` ( b / y)
+    | b < 0 = negInfinity `I` ( b / y)
     | a < 0 = whole 
- -- | isNegativeZero a = whole
-    | otherwise = (a / down y) `I` posInfinity
+    | otherwise = (a / y) `I` posInfinity
 
 -- divNegative assumes y < 0 and divides the interval @X@ by [y ... 0]
-divNegative :: Precision a => Interval a -> a -> Interval a
+divNegative :: (Fractional a, Ord a) => Interval a -> a -> Interval a
 divNegative x@(I a b) y
-    | a == 0 && b == 0 = - x -- flips negative zeros
-    | b < 0 || isNegativeZero b = (d b / down y) `I` posInfinity
+    | a == 0 && b == 0 = - x -- flip negative zeros
+    -- | b < 0 || isNegativeZero b = (b / y) `I` posInfinity
+    | b < 0 = (b / y) `I` posInfinity
     | a < 0 = whole
- -- | isNegativeZero a = whole
-    | otherwise = negInfinity `I` (u a / up y)
+    | otherwise = negInfinity `I` (a / y)
 
-divZero :: Precision a => Interval a -> Interval a
+divZero :: (Fractional a, Ord a) => Interval a -> Interval a
 divZero x | inf x == 0 && sup x == 0 = x
           | otherwise = whole
 
-instance Precision a => Fractional (Interval a) where
+instance (Fractional a, Ord a) => Fractional (Interval a) where
     -- TODO: check isNegativeZero properly
     x / y
         | 0 `notElem` y = divNonZero x y 
@@ -213,10 +219,10 @@ instance Precision a => Fractional (Interval a) where
         where 
             iz = inf y == 0
             sz = sup y == 0
-    recip (I a b)   = on min recip a (d b) `I` on max recip (u a) b
-    fromRational r  = fromRational r `I` fromRational r
+    recip (I a b)   = on min recip a b ... on max recip a b
+    fromRational r  = fromRational r ... fromRational r
 
-instance Precision a => RealFrac (Interval a) where
+instance RealFloat a => RealFrac (Interval a) where
     properFraction x = (b, x - fromIntegral b)
         where 
             b = truncate (midpoint x)
@@ -225,62 +231,57 @@ instance Precision a => RealFrac (Interval a) where
     round x = round (midpoint x)
     truncate x = truncate (midpoint x)
 
-instance Precision a => Floating (Interval a) where
-    pi = pi `I` pi 
+instance (RealExtras a, Ord a) => Floating (Interval a) where
+    pi = singleton pi
     exp = increasing exp
-    log (I a b) = (if a > 0 then log a else negInfinity) `I` log b
+    log (I a b) = (if a > 0 then log a else negInfinity) ... log b
     cos x 
         | null x = empty
-        | inf (width t) >= inf pi = (-1) ... 1
-        | tl >= d pih  = - cos (t - pi)
-        | th <= u pil  = cos (d th) `I` cos (u tl)
-        | th <= u pi2l = (-1) `I` cos (u (min (pi2l - d th) tl))
-        | otherwise  = (-1) ... 1
+        | width t >= pi = (-1) ... 1
+        | inf t >= pi = - cos (t - pi)
+        | sup t <= pi = decreasing cos t
+        | sup t <= 2 * pi = (-1) ... cos ((pi * 2 - sup t) `min` inf t)
+        | otherwise = (-1) ... 1
         where 
-            I pil pih = pi
-            pi2@(I pi2l _) = pi * 2
-            t@(I tl th) = x `fmod` pi2
+            t = fmod x (pi * 2)
     sin x 
         | null x = empty
         | otherwise = cos (x - pi / 2)
     tan x 
         | null x = empty
-        | inf t' <= -hpil || sup t' >= hpil = whole
+        | inf t' <= - pi / 2 || sup t' >= pi / 2 = whole
         | otherwise = increasing tan x
         where
             t = x `fmod` pi 
-            t' | inf t >= hpil = t - pi
-               | otherwise = t
-            hpil = inf (pi / 2)
+            t' | t >= pi / 2 = t - pi
+               | otherwise    = t
     asin x@(I a b)
         | null x || b < -1 || a > 1 = empty
         | otherwise = 
-            (if a <= - 1 then - d hpis else asin a)
+            (if a <= -1 then -halfPi else asin a)
             `I`
-            (if b >= 1 then hpis else asin b)
+            (if b >= 1 then halfPi else asin b)
         where
-            I _ hpis = pi / 2
+            halfPi = pi / 2
     acos x@(I a b)
         | null x || b < -1 || a > 1 = empty
         | otherwise = 
-            (if b >= 1 then 0 else acos (d b))
+            (if b >= 1 then 0 else acos b)
             `I`
-            (if a < -1 then pis else acos (u a))
-        where
-            I _ pis = pi
+            (if a < -1 then pi else acos a)
     atan = increasing atan
     sinh = increasing sinh
     cosh x@(I a b)
         | null x = empty
         | b < 0  = decreasing cosh x
         | a >= 0 = increasing cosh x
-        | otherwise  = I 0 $ cosh $ if - u a > b
-                                    then u a 
+        | otherwise  = I 0 $ cosh $ if - a > b
+                                    then a 
                                     else b
     tanh = increasing tanh
     asinh = increasing asinh
     acosh x@(I a b)
-        | null x || b < 1 = empty -- acosh is only defined on [1..1/0)
+        | null x || b < 1 = empty
         | otherwise = I lo $ acosh b
         where lo | a <= 1 = 0 
                  | otherwise = acosh a
@@ -292,21 +293,16 @@ instance Precision a => Floating (Interval a) where
                 (if b >= 1 then posInfinity else atanh b)
     
 -- | lift a monotone increasing function over a given interval 
-increasing :: Precision a => 
-         (forall d. Rounding d => Round d a -> Round d a) -> 
-         Interval a -> Interval a
+increasing :: (a -> a) -> Interval a -> Interval a
 increasing f (I a b) = I (f a) (f b)
 
 -- | lift a monotone increasing function over a given interval 
-decreasing :: Precision a => 
-         (forall d. Rounding d => Round d a -> Round d a) -> 
-         Interval a -> Interval a
-decreasing f (I a b) = I (f (d b)) (f (u a))
-
+decreasing :: (a -> a) -> Interval a -> Interval a
+decreasing f (I a b) = I (f b) (f a)
 
 -- | We have to play some semantic games to make these methods make sense.
 -- Most compute with the midpoint of the interval.
-instance Precision a => RealFloat (Interval a) where
+instance RealExtras a => RealFloat (Interval a) where
     floatRadix = floatRadix . midpoint
     floatDigits = floatDigits . midpoint
     floatRange = floatRange . midpoint
@@ -336,10 +332,11 @@ instance Precision a => RealFloat (Interval a) where
 -- TODO: (^), (^^) to give tighter bounds
         
 -- | Calculate the intersection of two intervals.
-intersection :: Precision a => Interval a -> Interval a -> Interval a
+intersection :: (Fractional a, Ord a) => Interval a -> Interval a -> Interval a
 intersection x@(I a b) y@(I a' b')
     | x /=! y = empty
     | otherwise = I (max a a') (min b b')
+{-# INLINE intersection #-}
 
 -- | Calculate the convex hull of two intervals
 hull :: Ord a => Interval a -> Interval a -> Interval a
@@ -347,10 +344,10 @@ hull x@(I a b) y@(I a' b')
     | null x = y
     | null y = x
     | otherwise = I (min a a') (max b b')
+{-# INLINE hull #-}
     
-instance Precision a => RealExtras (Interval a) where
+instance RealExtras a => RealExtras (Interval a) where
     type C (Interval a) = C a
-    -- output always lies within the interval y if y >=! 0
     fmod x y | null y = empty 
              | otherwise = r -- `intersection` bounds
         where 
@@ -423,11 +420,11 @@ contains x y = null y
 isSubsetOf :: Ord a => Interval a -> Interval a -> Bool
 isSubsetOf = flip contains
 
--- | Comparisons are made on the midpoint
-instance Precision a => Ord (Interval a) where
-    compare = compare `on` midpoint
-    max (I a b) (I a' b') = I (max a a') (max b b')
-    min (I a b) (I a' b') = I (min a a') (min b b')
+maxInterval :: Ord a => Interval a -> Interval a -> Interval a
+maxInterval  (I a b) (I a' b') = I (max a a') (max b b')
+
+minInterval :: Ord a => Interval a -> Interval a -> Interval a
+minInterval  (I a b) (I a' b') = I (min a a') (min b b')
 
 -- | Does there exist an @x@ in @X@, @y@ in @Y@ such that @x '<' y@?
 (<?) :: Ord a => Interval a -> Interval a -> Bool
