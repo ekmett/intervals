@@ -13,7 +13,8 @@
 -----------------------------------------------------------------------------
 
 module Numeric.Interval 
-    ( whole
+    ( Interval(..)
+    , whole
     , empty
     , null
     , singleton
