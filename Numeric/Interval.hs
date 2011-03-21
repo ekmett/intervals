@@ -190,7 +190,7 @@ divNonZero (I a b) (I a' b') =
 divPositive :: (Fractional a, Ord a) => Interval a -> a -> Interval a 
 divPositive x@(I a b) y
     | a == 0 && b == 0 = x
-    -- | b < 0 || isNegativeZero b = negInfinity `I` ( b / y)
+    -- b < 0 || isNegativeZero b = negInfinity `I` ( b / y)
     | b < 0 = negInfinity `I` ( b / y)
     | a < 0 = whole 
     | otherwise = (a / y) `I` posInfinity
@@ -199,7 +199,7 @@ divPositive x@(I a b) y
 divNegative :: (Fractional a, Ord a) => Interval a -> a -> Interval a
 divNegative x@(I a b) y
     | a == 0 && b == 0 = - x -- flip negative zeros
-    -- | b < 0 || isNegativeZero b = (b / y) `I` posInfinity
+    -- b < 0 || isNegativeZero b = (b / y) `I` posInfinity
     | b < 0 = (b / y) `I` posInfinity
     | a < 0 = whole
     | otherwise = negInfinity `I` (a / y)
