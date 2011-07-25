@@ -1,5 +1,5 @@
 Name:              intervals
-Version:           0.2.0.1
+Version:           0.2.0.2
 Synopsis:          Interval Arithmetic
 Description:
     A 'Numeric.Interval.Interval' is a closed, convex set of floating point values.
@@ -9,7 +9,7 @@ Description:
     containment of the result, you will need to use an underlying type with
     both lower and upper bounds like 'CReal'
 
-Homepage:          http://patch-tag.com/r/ekmett/intervals
+Homepage:          http://github.com/ekmett/intervals
 License:           BSD3
 License-file:      LICENSE
 Author:            Edward Kmett
