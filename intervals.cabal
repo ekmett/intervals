@@ -1,7 +1,7 @@
-Name:              intervals
-Version:           0.2.0.2
-Synopsis:          Interval Arithmetic
-Description:
+name:              intervals
+version:           0.2.0.3
+synopsis:          Interval Arithmetic
+description:
     A 'Numeric.Interval.Interval' is a closed, convex set of floating point values.
     .
     We do not control the rounding mode of the end points of the interval when
@@ -9,18 +9,26 @@ Description:
     containment of the result, you will need to use an underlying type with
     both lower and upper bounds like 'CReal'
 
-Homepage:          http://github.com/ekmett/intervals
-License:           BSD3
-License-file:      LICENSE
-Author:            Edward Kmett
-Maintainer:        ekmett@gmail.com
-Category:          Math
-Build-type:        Simple
-Cabal-version:     >=1.6
+homepage:          http://github.com/ekmett/intervals
+license:           BSD3
+license-file:      LICENSE
+author:            Edward Kmett
+maintainer:        ekmett@gmail.com
+category:          Math
+build-type:        Simple
+cabal-version:     >=1.6
 
-Library
-  Exposed-modules: Numeric.Interval
-  Build-depends:   base >= 4 && < 5,
-                   array >= 0.3.0 && < 0.4,
-                   numeric-extras >= 0.0.1 && < 0.1
-  GHC-Options:     -Wall
+source-repository head
+  type: git
+  location: git://github.com/ekmett/intervals.git
+
+library
+  other-extensions: 
+    Rank2Types
+    TypeFamilies
+  exposed-modules: Numeric.Interval
+  build-depends:   
+    base >= 4 && < 5,
+    array >= 0.3.0 && < 0.4,
+    numeric-extras >= 0.0.1 && < 0.1
+  ghc-options:     -Wall
