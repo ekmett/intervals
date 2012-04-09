@@ -1,5 +1,5 @@
 name:              intervals
-version:           0.2.0.3
+version:           0.2.1
 synopsis:          Interval Arithmetic
 description:
     A 'Numeric.Interval.Interval' is a closed, convex set of floating point values.
@@ -23,12 +23,12 @@ source-repository head
   location: git://github.com/ekmett/intervals.git
 
 library
-  other-extensions: 
+  other-extensions:
     Rank2Types
     TypeFamilies
   exposed-modules: Numeric.Interval
-  build-depends:   
-    base >= 4 && < 5,
-    array >= 0.3.0 && < 0.4,
+  build-depends:
+    base           >= 4 && < 5,
+    array          >= 0.3.0 && < 0.5,
     numeric-extras >= 0.0.1 && < 0.1
   ghc-options:     -Wall
