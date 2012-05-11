@@ -1,5 +1,5 @@
 name:              intervals
-version:           0.2.1
+version:           0.2.1.1
 synopsis:          Interval Arithmetic
 description:
     A 'Numeric.Interval.Interval' is a closed, convex set of floating point values.
@@ -10,6 +10,7 @@ description:
     both lower and upper bounds like 'CReal'
 
 homepage:          http://github.com/ekmett/intervals
+bug-reports:       http://github.com/ekmett/intervals/issues
 license:           BSD3
 license-file:      LICENSE
 author:            Edward Kmett
@@ -17,6 +18,7 @@ maintainer:        ekmett@gmail.com
 category:          Math
 build-type:        Simple
 cabal-version:     >=1.6
+extra-source-files: .travis.yml
 
 source-repository head
   type: git
