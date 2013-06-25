@@ -25,6 +25,7 @@ module Numeric.Interval
     , sup
     , singular
     , width
+    , midpoint
     , intersection
     , hull
     , bisection
