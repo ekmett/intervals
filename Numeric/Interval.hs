@@ -135,7 +135,7 @@ instance (Num a, Ord a) => Num (Interval a) where
     abs x@(I a b) 
         | a >= 0    = x 
         | b <= 0    = negate x
-        | otherwise = max (- a) b ... b
+        | otherwise = 0 ... max (- a) b
 
     signum = increasing signum
 
