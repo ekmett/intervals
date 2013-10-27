@@ -40,7 +40,6 @@ module Numeric.Interval
     ) where
 
 import Prelude hiding (null, elem, notElem)
-import Numeric.Extras hiding (fmod)
 import Data.Function (on)
 
 data Interval a = I !a !a
@@ -351,24 +350,6 @@ hull x@(I a b) y@(I a' b')
     | otherwise = I (min a a') (max b b')
 {-# INLINE hull #-}
     
-instance RealExtras a => RealExtras (Interval a) where
-    type C (Interval a) = C a
-    fmod x y | null y = empty 
-             | otherwise = r -- `intersection` bounds
-        where 
-            n :: Integer
-            n = floor (inf x / if inf x < 0 then inf y else sup y)
-            r = x - fromIntegral n * y 
-            -- bounds | inf y >= 0 = y
-            --        | otherwise = y `hull` negate y
-    expm1 = increasing expm1
-    log1p (I a b) = (if a > (-1) then log1p a else negInfinity) `I` log1p b
-    hypot x y = hypot a a' `I` hypot b b'
-        where
-            I a b = abs x
-            I a' b' = abs y
-    cbrt = increasing cbrt
-    erf = increasing erf
 
 -- | For all @x@ in @X@, @y@ in @Y@. @x '<' y@
 (<!)  :: Ord a => Interval a -> Interval a -> Bool
