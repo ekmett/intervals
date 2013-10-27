@@ -40,7 +40,7 @@ module Numeric.Interval
     ) where
 
 import Prelude hiding (null, elem, notElem)
-import Numeric.Extras
+import Numeric.Extras hiding (fmod)
 import Data.Function (on)
 
 data Interval a = I !a !a
@@ -57,6 +57,10 @@ posInfinity = 1/0
 
 nan :: Fractional a => a 
 nan = 0/0
+
+fmod :: RealFrac a => a -> a -> a
+fmod a b = a - q*b where
+  q = realToFrac (truncate $ a / b :: Integer)
 
 -- | The rule of thumb is you should only use this to construct using values
 -- that you took out of the interval. Otherwise, use I, to force rounding
@@ -223,7 +227,7 @@ instance (Fractional a, Ord a) => Fractional (Interval a) where
     recip (I a b)   = on min recip a b ... on max recip a b
     fromRational r  = fromRational r ... fromRational r
 
-instance RealFloat a => RealFrac (Interval a) where
+instance RealFrac a => RealFrac (Interval a) where
     properFraction x = (b, x - fromIntegral b)
         where 
             b = truncate (midpoint x)
@@ -232,7 +236,7 @@ instance RealFloat a => RealFrac (Interval a) where
     round x = round (midpoint x)
     truncate x = truncate (midpoint x)
 
-instance (RealExtras a, Ord a) => Floating (Interval a) where
+instance (RealFloat a, Ord a) => Floating (Interval a) where
     pi = singleton pi
     exp = increasing exp
     log (I a b) = (if a > 0 then log a else negInfinity) ... log b
@@ -303,7 +307,7 @@ decreasing f (I a b) = I (f b) (f a)
 
 -- | We have to play some semantic games to make these methods make sense.
 -- Most compute with the midpoint of the interval.
-instance RealExtras a => RealFloat (Interval a) where
+instance RealFloat a => RealFloat (Interval a) where
     floatRadix = floatRadix . midpoint
     floatDigits = floatDigits . midpoint
     floatRange = floatRange . midpoint
