@@ -169,12 +169,12 @@ width :: Num a => Interval a -> a
 width (I a b) = b - a
 {-# INLINE width #-}
 
--- | magnitude
+-- | Magnitude
 magnitude :: (Num a, Ord a) => Interval a -> a
 magnitude x = (max `on` abs) (inf x) (sup x)
 {-# INLINE magnitude #-}
 
--- | "mignitude"
+-- | \"mignitude\"
 mignitude :: (Num a, Ord a) => Interval a -> a
 mignitude x = (min `on` abs) (inf x) (sup x)
 {-# INLINE mignitude #-}
