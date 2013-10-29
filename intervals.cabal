@@ -27,8 +27,9 @@ source-repository head
 
 library
   hs-source-dirs: src
-  other-extensions: Rank2Types
+
   exposed-modules: Numeric.Interval
+
   build-depends:
     array          >= 0.3   && < 0.6,
     base           >= 4     && < 5
