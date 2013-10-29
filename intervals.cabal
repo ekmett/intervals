@@ -2,13 +2,12 @@ name:              intervals
 version:           0.3
 synopsis:          Interval Arithmetic
 description:
-    A 'Numeric.Interval.Interval' is a closed, convex set of floating point values.
-    .
-    We do not control the rounding mode of the end points of the interval when
-    using floating point arithmetic, so be aware that in order to get precise
-    containment of the result, you will need to use an underlying type with
-    both lower and upper bounds like 'CReal'
-
+  A 'Numeric.Interval.Interval' is a closed, convex set of floating point values.
+  .
+  We do not control the rounding mode of the end points of the interval when
+  using floating point arithmetic, so be aware that in order to get precise
+  containment of the result, you will need to use an underlying type with
+  both lower and upper bounds like 'CReal'
 homepage:           http://github.com/ekmett/intervals
 bug-reports:        http://github.com/ekmett/intervals/issues
 license:            BSD3
