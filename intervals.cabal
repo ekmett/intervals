@@ -19,7 +19,7 @@ category:           Math
 build-type:         Simple
 cabal-version:      >=1.6
 extra-source-files: .travis.yml CHANGELOG.markdown README.markdown
-tested-with:        GHC == 7.4.2, GHC == 7.6.1
+tested-with:        GHC == 7.4.2, GHC == 7.6.1, GHC == 7.6.3
 
 source-repository head
   type: git
@@ -31,6 +31,7 @@ library
     TypeFamilies
   exposed-modules: Numeric.Interval
   build-depends:
+    array          >= 0.3   && < 0.6,
     base           >= 4     && < 5,
-    array          >= 0.3   && < 0.6
+    ghc-prim
   ghc-options:     -Wall
