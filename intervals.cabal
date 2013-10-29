@@ -32,6 +32,9 @@ library
   exposed-modules: Numeric.Interval
   build-depends:
     array          >= 0.3   && < 0.6,
-    base           >= 4     && < 5,
-    ghc-prim
-  ghc-options:     -Wall
+    base           >= 4     && < 5
+
+  if impl(ghc >=7.4)
+    build-depends: ghc-prim
+
+  ghc-options:     -Wall -O2

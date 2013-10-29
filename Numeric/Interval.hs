@@ -1,8 +1,9 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE Rank2Types #-}
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveDataTypeable #-}
+#if defined(__GLASGOW_HASKELL) && __GLASGOW_HASKELL__ >= 704
+{-# LANGUAGE DeriveGeneric #-}
+#endif
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Numeric.Interval
@@ -10,7 +11,7 @@
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com
 -- Stability   :  experimental
--- Portability :  GHC only
+-- Portability :  DeriveDataTypeable
 --
 -- Interval arithmetic
 --
