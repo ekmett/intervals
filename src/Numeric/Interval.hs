@@ -389,7 +389,7 @@ instance (RealFloat a, Ord a) => Floating (Interval a) where
 increasing :: (a -> b) -> Interval a -> Interval b
 increasing f (I a b) = f a ... f b
 
--- | lift a monotone increasing function over a given interval
+-- | lift a monotone decreasing function over a given interval
 decreasing :: (a -> b) -> Interval a -> Interval b
 decreasing f (I a b) = f b ... f a
 
