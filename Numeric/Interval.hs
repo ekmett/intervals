@@ -49,11 +49,21 @@ import Data.Foldable hiding (minimum, maximum, elem, notElem)
 import Data.Function (on)
 import Data.Monoid
 import Data.Traversable
+#if defined(__GLASGOW_HASKELL) && __GLASGOW_HASKELL__ >= 704
 import GHC.Generics
+#endif
 import Prelude hiding (null, elem, notElem)
 
-data Interval a = I !a !a
-  deriving (Data,Typeable,Generic)
+data Interval a = I !a !a deriving
+  ( Data
+  , Typeable
+#if defined(__GLASGOW_HASKELL) && __GLASGOW_HASKELL__ >= 704
+  , Generic
+#if __GLASGOW_HASKELL__ >= 706
+  , Generic1
+#endif
+#endif
+  )
 
 instance Functor Interval where
   fmap f (I a b) = I (f a) (f b)
