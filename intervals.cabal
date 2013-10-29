@@ -26,9 +26,8 @@ source-repository head
   location: git://github.com/ekmett/intervals.git
 
 library
-  other-extensions:
-    Rank2Types
-    TypeFamilies
+  hs-source-dirs: src
+  other-extensions: Rank2Types
   exposed-modules: Numeric.Interval
   build-depends:
     array          >= 0.3   && < 0.6,
