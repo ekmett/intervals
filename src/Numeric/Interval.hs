@@ -120,7 +120,7 @@ fmod a b = a - q*b where
 
 -- | The whole real number line
 --
--- >>> whole :: Interval Double
+-- >>> whole
 -- -Infinity ... Infinity
 whole :: Fractional a => Interval a
 whole = negInfinity ... posInfinity
@@ -128,7 +128,7 @@ whole = negInfinity ... posInfinity
 
 -- | An empty interval
 --
--- >>> empty :: Interval Double
+-- >>> empty
 -- NaN ... NaN
 empty :: Fractional a => Interval a
 empty = nan ... nan
@@ -150,24 +150,24 @@ null x = not (inf x <= sup x)
 
 -- | A singleton point
 --
--- >>> singleton 1 :: Interval Double
--- 1.0 ... 1.0
+-- >>> singleton 1
+-- 1 ... 1
 singleton :: a -> Interval a
 singleton a = a ... a
 {-# INLINE singleton #-}
 
 -- | The infinumum (lower bound) of an interval
 --
--- >>> inf (1.0 ... 20.0 :: Interval Double)
--- 1.0
+-- >>> inf (1 ... 20)
+-- 1
 inf :: Interval a -> a
 inf (I a _) = a
 {-# INLINE inf #-}
 
 -- | The supremum (upper bound) of an interval
 --
--- >>> sup (1.0 ... 20.0 :: Interval Double)
--- 20.0
+-- >>> sup (1 ... 20)
+-- 20
 sup :: Interval a -> a
 sup (I _ b) = b
 {-# INLINE sup #-}
@@ -176,10 +176,10 @@ sup (I _ b) = b
 -- N.B. This is fairly fragile and likely will not hold after
 -- even a few operations that only involve singletons
 --
--- >>> singular (singleton 1 :: Interval Double)
+-- >>> singular (singleton 1)
 -- True
 --
--- >>> singular (1.0 ... 20.0 :: Interval Double)
+-- >>> singular (1.0 ... 20.0)
 -- False
 singular :: Ord a => Interval a -> Bool
 singular x = not (null x) && inf x == sup x
@@ -198,13 +198,13 @@ instance Show a => Show (Interval a) where
 
 -- | Calculate the width of an interval.
 --
--- >>> width (1 ... 20 :: Interval Double)
--- 19.0
+-- >>> width (1 ... 20)
+-- 19
 --
--- >>> width (singleton 1 :: Interval Double)
--- 0.0
+-- >>> width (singleton 1)
+-- 0
 --
--- >>> width (empty :: Interval Double)
+-- >>> width empty
 -- NaN
 width :: Num a => Interval a -> a
 width (I a b) = b - a
@@ -212,28 +212,28 @@ width (I a b) = b - a
 
 -- | Magnitude
 --
--- >>> magnitude (1.0 ... 20.0 :: Interval Double)
--- 20.0
+-- >>> magnitude (1 ... 20)
+-- 20
 --
--- >>> magnitude (-20.0 ... 10.0 :: Interval Double)
--- 20.0
+-- >>> magnitude (-20 ... 10)
+-- 20
 --
--- >>> magnitude (singleton 5 :: Interval Double)
--- 5.0
+-- >>> magnitude (singleton 5)
+-- 5
 magnitude :: (Num a, Ord a) => Interval a -> a
 magnitude x = (max `on` abs) (inf x) (sup x)
 {-# INLINE magnitude #-}
 
 -- | \"mignitude\"
 --
--- >>> mignitude (1.0 ... 20.0 :: Interval Double)
--- 1.0 
+-- >>> mignitude (1 ... 20)
+-- 1
 --
--- >>> mignitude (-20.0 ... 10.0 :: Interval Double)
--- 10.0
+-- >>> mignitude (-20 ... 10)
+-- 10
 --
--- >>> mignitude (singleton 5 :: Interval Double)
--- 5.0
+-- >>> mignitude (singleton 5)
+-- 5
 mignitude :: (Num a, Ord a) => Interval a -> a
 mignitude x = (min `on` abs) (inf x) (sup x)
 {-# INLINE mignitude #-}
@@ -262,13 +262,13 @@ instance (Num a, Ord a) => Num (Interval a) where
 
 -- | Bisect an interval at its midpoint.
 --
--- >>> bisection (10.0 ... 20.0 :: Interval Double)
+-- >>> bisection (10.0 ... 20.0)
 -- (10.0 ... 15.0,15.0 ... 20.0)
 --
--- >>> bisection (singleton 5 :: Interval Double)
+-- >>> bisection (singleton 5.0)
 -- (5.0 ... 5.0,5.0 ... 5.0)
--- 
--- >>> bisection (empty :: Interval Double)
+--
+-- >>> bisection empty
 -- (NaN ... NaN,NaN ... NaN)
 bisection :: Fractional a => Interval a -> (Interval a, Interval a)
 bisection x = (inf x ... m, m ... sup x)
@@ -277,13 +277,13 @@ bisection x = (inf x ... m, m ... sup x)
 
 -- | Nearest point to the midpoint of the interval.
 --
--- >>> midpoint (10.0 ... 20.0 :: Interval Double)
+-- >>> midpoint (10.0 ... 20.0)
 -- 15.0
 --
--- >>> midpoint (singleton 5 :: Interval Double)
+-- >>> midpoint (singleton 5.0)
 -- 5.0
--- 
--- >>> midpoint (empty :: Interval Double)
+--
+-- >>> midpoint empty
 -- NaN
 midpoint :: Fractional a => Interval a -> a
 midpoint x = inf x + (sup x - inf x) / 2
@@ -291,19 +291,19 @@ midpoint x = inf x + (sup x - inf x) / 2
 
 -- | Determine if a point is in the interval.
 --
--- >>> elem 3.2 (1.0 ... 5.0 :: Interval Double)
+-- >>> elem 3.2 (1.0 ... 5.0)
 -- True
 --
--- >>> elem 5 (1.0 ... 5.0 :: Interval Double)
+-- >>> elem 5 (1.0 ... 5.0)
 -- True
 --
--- >>> elem 1 (1.0 ... 5.0 :: Interval Double)
+-- >>> elem 1 (1.0 ... 5.0)
 -- True
 --
--- >>> elem 8 (1.0 ... 5.0 :: Interval Double)
+-- >>> elem 8 (1.0 ... 5.0)
 -- False
 --
--- >>> elem 5 (empty :: Interval Double)
+-- >>> elem 5 empty
 -- False
 --
 elem :: Ord a => a -> Interval a -> Bool
@@ -312,23 +312,21 @@ elem x xs = x >= inf xs && x <= sup xs
 
 -- | Determine if a point is not included in the interval
 --
--- >>> notElem 8 (1.0 ... 5.0 :: Interval Double)
+-- >>> notElem 8 (1.0 ... 5.0)
 -- True
 --
--- >>> notElem 1.4 (1.0 ... 5.0 :: Interval Double)
+-- >>> notElem 1.4 (1.0 ... 5.0)
 -- False
 --
 -- And of course, nothing is a member of the empty interval.
 --
--- >>> notElem 5 (empty :: Interval Double)
+-- >>> notElem 5 empty
 -- True
 notElem :: Ord a => a -> Interval a -> Bool
 notElem x xs = not (elem x xs)
 {-# INLINE notElem #-}
 
--- | This means that realToFrac will use the midpoint
-
--- | What moron put an Ord instance requirement on Real!
+-- | 'realToFrac' will use the midpoint
 instance Real a => Real (Interval a) where
   toRational x
     | null x   = nan
@@ -734,3 +732,6 @@ ifloat = id
 
 -- Bugs:
 -- sin 1 :: Interval Double
+
+
+default (Integer,Double)
