@@ -15,14 +15,23 @@ license-file:       LICENSE
 author:             Edward Kmett
 maintainer:         ekmett@gmail.com
 category:           Math
-build-type:         Simple
+build-type:         Custom
 cabal-version:      >=1.6
-extra-source-files: .travis.yml CHANGELOG.markdown README.markdown HLint.hs
 tested-with:        GHC == 7.4.2, GHC == 7.6.1, GHC == 7.6.3
+extra-source-files: 
+  .travis.yml
+  CHANGELOG.markdown
+  README.markdown
+  HLint.hs
 
 source-repository head
   type: git
   location: git://github.com/ekmett/intervals.git
+
+-- You can disable the doctests test suite with -f-test-doctests
+flag test-doctests
+  default: True
+  manual: True
 
 library
   hs-source-dirs: src
@@ -37,3 +46,22 @@ library
     build-depends: ghc-prim
 
   ghc-options:     -Wall -O2
+
+
+test-suite doctests
+  type:           exitcode-stdio-1.0
+  main-is:        doctests.hs
+  ghc-options:    -Wall -threaded
+  hs-source-dirs: tests
+
+  if !flag(test-doctests)
+    buildable: False
+  else
+    build-depends:
+      base,
+      directory      >= 1.0,
+      doctest        >= 0.9.1,
+      filepath
+
+  if impl(ghc<7.6.1)
+    ghc-options: -Werror

@@ -55,6 +55,8 @@ import GHC.Generics
 #endif
 import Prelude hiding (null, elem, notElem)
 
+-- $setup
+
 data Interval a = I !a !a deriving
   ( Data
   , Typeable
@@ -117,31 +119,55 @@ fmod a b = a - q*b where
 {-# INLINE (...) #-}
 
 -- | The whole real number line
+--
+-- >>> whole :: Interval Double
+-- -Infinity ... Infinity
 whole :: Fractional a => Interval a
 whole = negInfinity ... posInfinity
 {-# INLINE whole #-}
 
 -- | An empty interval
+--
+-- >>> empty :: Interval Double
+-- NaN ... NaN
 empty :: Fractional a => Interval a
 empty = nan ... nan
 {-# INLINE empty #-}
 
 -- | negation handles NaN properly
+--
+-- >>> null (1 ... 5)
+-- False
+--
+-- >>> null (1 ... 1)
+-- False
+--
+-- >>> null empty
+-- True
 null :: Ord a => Interval a -> Bool
 null x = not (inf x <= sup x)
 {-# INLINE null #-}
 
 -- | A singleton point
+--
+-- >>> singleton 1 :: Interval Double
+-- 1.0 ... 1.0
 singleton :: a -> Interval a
 singleton a = a ... a
 {-# INLINE singleton #-}
 
 -- | The infinumum (lower bound) of an interval
+--
+-- >>> inf (1.0 ... 20.0 :: Interval Double)
+-- 1.0
 inf :: Interval a -> a
 inf (I a _) = a
 {-# INLINE inf #-}
 
 -- | The supremum (upper bound) of an interval
+--
+-- >>> sup (1.0 ... 20.0 :: Interval Double)
+-- 20.0
 sup :: Interval a -> a
 sup (I _ b) = b
 {-# INLINE sup #-}
@@ -149,6 +175,12 @@ sup (I _ b) = b
 -- | Is the interval a singleton point?
 -- N.B. This is fairly fragile and likely will not hold after
 -- even a few operations that only involve singletons
+--
+-- >>> singular (singleton 1 :: Interval Double)
+-- True
+--
+-- >>> singular (1.0 ... 20.0 :: Interval Double)
+-- False
 singular :: Ord a => Interval a -> Bool
 singular x = not (null x) && inf x == sup x
 {-# INLINE singular #-}
@@ -165,16 +197,43 @@ instance Show a => Show (Interval a) where
       showsPrec 3 b
 
 -- | Calculate the width of an interval.
+--
+-- >>> width (1 ... 20 :: Interval Double)
+-- 19.0
+--
+-- >>> width (singleton 1 :: Interval Double)
+-- 0.0
+--
+-- >>> width (empty :: Interval Double)
+-- NaN
 width :: Num a => Interval a -> a
 width (I a b) = b - a
 {-# INLINE width #-}
 
 -- | Magnitude
+--
+-- >>> magnitude (1.0 ... 20.0 :: Interval Double)
+-- 20.0
+--
+-- >>> magnitude (-20.0 ... 10.0 :: Interval Double)
+-- 20.0
+--
+-- >>> magnitude (singleton 5 :: Interval Double)
+-- 5.0
 magnitude :: (Num a, Ord a) => Interval a -> a
 magnitude x = (max `on` abs) (inf x) (sup x)
 {-# INLINE magnitude #-}
 
 -- | \"mignitude\"
+--
+-- >>> mignitude (1.0 ... 20.0 :: Interval Double)
+-- 1.0 
+--
+-- >>> mignitude (-20.0 ... 10.0 :: Interval Double)
+-- 10.0
+--
+-- >>> mignitude (singleton 5 :: Interval Double)
+-- 5.0
 mignitude :: (Num a, Ord a) => Interval a -> a
 mignitude x = (min `on` abs) (inf x) (sup x)
 {-# INLINE mignitude #-}
@@ -202,20 +261,67 @@ instance (Num a, Ord a) => Num (Interval a) where
   {-# INLINE fromInteger #-}
 
 -- | Bisect an interval at its midpoint.
+--
+-- >>> bisection (10.0 ... 20.0 :: Interval Double)
+-- (10.0 ... 15.0,15.0 ... 20.0)
+--
+-- >>> bisection (singleton 5 :: Interval Double)
+-- (5.0 ... 5.0,5.0 ... 5.0)
+-- 
+-- >>> bisection (empty :: Interval Double)
+-- (NaN ... NaN,NaN ... NaN)
 bisection :: Fractional a => Interval a -> (Interval a, Interval a)
 bisection x = (inf x ... m, m ... sup x)
   where m = midpoint x
 {-# INLINE bisection #-}
 
 -- | Nearest point to the midpoint of the interval.
+--
+-- >>> midpoint (10.0 ... 20.0 :: Interval Double)
+-- 15.0
+--
+-- >>> midpoint (singleton 5 :: Interval Double)
+-- 5.0
+-- 
+-- >>> midpoint (empty :: Interval Double)
+-- NaN
 midpoint :: Fractional a => Interval a -> a
 midpoint x = inf x + (sup x - inf x) / 2
 {-# INLINE midpoint #-}
 
+-- | Determine if a point is in the interval.
+--
+-- >>> elem 3.2 (1.0 ... 5.0 :: Interval Double)
+-- True
+--
+-- >>> elem 5 (1.0 ... 5.0 :: Interval Double)
+-- True
+--
+-- >>> elem 1 (1.0 ... 5.0 :: Interval Double)
+-- True
+--
+-- >>> elem 8 (1.0 ... 5.0 :: Interval Double)
+-- False
+--
+-- >>> elem 5 (empty :: Interval Double)
+-- False
+--
 elem :: Ord a => a -> Interval a -> Bool
 elem x xs = x >= inf xs && x <= sup xs
 {-# INLINE elem #-}
 
+-- | Determine if a point is not included in the interval
+--
+-- >>> notElem 8 (1.0 ... 5.0 :: Interval Double)
+-- True
+--
+-- >>> notElem 1.4 (1.0 ... 5.0 :: Interval Double)
+-- False
+--
+-- And of course, nothing is a member of the empty interval.
+--
+-- >>> notElem 5 (empty :: Interval Double)
+-- True
 notElem :: Ord a => a -> Interval a -> Bool
 notElem x xs = not (elem x xs)
 {-# INLINE notElem #-}
@@ -426,6 +532,9 @@ instance RealFloat a => RealFloat (Interval a) where
 -- TODO: (^), (^^) to give tighter bounds
 
 -- | Calculate the intersection of two intervals.
+--
+-- >>> intersection (1 ... 10 :: Interval Double) (5 ... 15 :: Interval Double)
+-- 5.0 ... 10.0
 intersection :: (Fractional a, Ord a) => Interval a -> Interval a -> Interval a
 intersection x@(I a b) y@(I a' b')
   | x /=! y = empty
@@ -433,6 +542,12 @@ intersection x@(I a b) y@(I a' b')
 {-# INLINE intersection #-}
 
 -- | Calculate the convex hull of two intervals
+--
+-- >>> hull (0 ... 10 :: Interval Double) (5 ... 15 :: Interval Double)
+-- 0.0 ... 15.0
+--
+-- >>> hull (15 ... 85 :: Interval Double) (0 ... 10 :: Interval Double)
+-- 0.0 ... 85.0
 hull :: Ord a => Interval a -> Interval a -> Interval a
 hull x@(I a b) y@(I a' b')
   | null x = y
@@ -441,36 +556,82 @@ hull x@(I a b) y@(I a' b')
 {-# INLINE hull #-}
 
 -- | For all @x@ in @X@, @y@ in @Y@. @x '<' y@
+--
+-- >>> (5 ... 10 :: Interval Double) <! (20 ... 30 :: Interval Double)
+-- True
+--
+-- >>> (5 ... 10 :: Interval Double) <! (10 ... 30 :: Interval Double)
+-- False
+--
+-- >>> (20 ... 30 :: Interval Double) <! (5 ... 10 :: Interval Double) 
+-- False
 (<!)  :: Ord a => Interval a -> Interval a -> Bool
 x <! y = sup x < inf y
 {-# INLINE (<!) #-}
 
 -- | For all @x@ in @X@, @y@ in @Y@. @x '<=' y@
+--
+-- >>> (5 ... 10 :: Interval Double) <=! (20 ... 30 :: Interval Double)
+-- True
+--
+-- >>> (5 ... 10 :: Interval Double) <=! (10 ... 30 :: Interval Double)
+-- True
+--
+-- >>> (20 ... 30 :: Interval Double) <=! (5 ... 10 :: Interval Double) 
+-- False
 (<=!) :: Ord a => Interval a -> Interval a -> Bool
 x <=! y = sup x <= inf y
 {-# INLINE (<=!) #-}
 
 -- | For all @x@ in @X@, @y@ in @Y@. @x '==' y@
+--
+-- Only singleton intervals return true
+--
+-- >>> (singleton 5 :: Interval Double) ==! (singleton 5 :: Interval Double)
+-- True
+--
+-- >>> (5 ... 10 :: Interval Double) ==! (5 ... 10 :: Interval Double) 
+-- False
 (==!) :: Eq a => Interval a -> Interval a -> Bool
 x ==! y = sup x == inf y && inf x == sup y
 {-# INLINE (==!) #-}
 
 -- | For all @x@ in @X@, @y@ in @Y@. @x '/=' y@
+--
+-- >>> (5 ... 15 :: Interval Double) /=! (20 ... 40 :: Interval Double) 
+-- True
+--
+-- >>> (5 ... 15 :: Interval Double) /=! (15 ... 40 :: Interval Double) 
+-- False
 (/=!) :: Ord a => Interval a -> Interval a -> Bool
 x /=! y = sup x < inf y || inf x > sup y
 {-# INLINE (/=!) #-}
 
 -- | For all @x@ in @X@, @y@ in @Y@. @x '>' y@
+--
+-- >>> (20 ... 40 :: Interval Double) >! (10 ... 19 :: Interval Double) 
+-- True
+--
+-- >>> (5 ... 20 :: Interval Double) >! (15 ... 40 :: Interval Double) 
+-- False
 (>!)  :: Ord a => Interval a -> Interval a -> Bool
 x >! y = inf x > sup y
 {-# INLINE (>!) #-}
 
 -- | For all @x@ in @X@, @y@ in @Y@. @x '>=' y@
+--
+-- >>> (20 ... 40 :: Interval Double) >=! (10 ... 20 :: Interval Double) 
+-- True
+--
+-- >>> (5 ... 20 :: Interval Double) >=! (15 ... 40 :: Interval Double) 
+-- False
 (>=!) :: Ord a => Interval a -> Interval a -> Bool
 x >=! y = inf x >= sup y
 {-# INLINE (>=!) #-}
 
 -- | For all @x@ in @X@, @y@ in @Y@. @x `op` y@
+--
+-- 
 certainly :: Ord a => (forall b. Ord b => b -> b -> Bool) -> Interval a -> Interval a -> Bool
 certainly cmp l r
     | lt && eq && gt = True
@@ -487,11 +648,25 @@ certainly cmp l r
         gt = cmp GT EQ
 {-# INLINE certainly #-}
 
+-- | Check if interval @X@ totally contains interval @Y@
+--
+-- >>> (20 ... 40 :: Interval Double) `contains` (25 ... 35 :: Interval Double) 
+-- True
+--
+-- >>> (20 ... 40 :: Interval Double) `contains` (15 ... 35 :: Interval Double) 
+-- False
 contains :: Ord a => Interval a -> Interval a -> Bool
 contains x y = null y
             || (not (null x) && inf x <= inf y && sup y <= sup x)
 {-# INLINE contains #-}
 
+-- | Flipped version of `contains`. Check if interval @X@ a subset of interval @Y@
+--
+-- >>> (25 ... 35 :: Interval Double) `isSubsetOf` (20 ... 40 :: Interval Double) 
+-- True
+--
+-- >>> (20 ... 40 :: Interval Double) `isSubsetOf` (15 ... 35 :: Interval Double) 
+-- False
 isSubsetOf :: Ord a => Interval a -> Interval a -> Bool
 isSubsetOf = flip contains
 {-# INLINE isSubsetOf #-}
@@ -543,9 +718,17 @@ possibly cmp l r
         gt = cmp GT EQ
 {-# INLINE possibly #-}
 
+-- | id function. Useful for type specification
+--
+-- >>> :t idouble (1 ... 3)
+-- idouble (1 ... 3) :: Interval Double
 idouble :: Interval Double -> Interval Double
 idouble = id
 
+-- | id function. Useful for type specification
+--
+-- >>> :t ifloat (1 ... 3)
+-- ifloat (1 ... 3) :: Interval Float
 ifloat :: Interval Float -> Interval Float
 ifloat = id
 
