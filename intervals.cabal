@@ -18,7 +18,7 @@ category:           Math
 build-type:         Custom
 cabal-version:      >=1.6
 tested-with:        GHC == 7.4.2, GHC == 7.6.1, GHC == 7.6.3
-extra-source-files: 
+extra-source-files:
   .travis.yml
   CHANGELOG.markdown
   README.markdown
