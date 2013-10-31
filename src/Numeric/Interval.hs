@@ -46,6 +46,7 @@ module Numeric.Interval
 
 import Control.Applicative hiding (empty)
 import Data.Data
+import Data.Distributive
 import Data.Foldable hiding (minimum, maximum, elem, notElem)
 import Data.Function (on)
 import Data.Monoid
@@ -93,6 +94,10 @@ instance Monad Interval where
     I a' _ = f a
     I _ b' = f b
   {-# INLINE (>>=) #-}
+
+instance Distributive Interval where
+  distribute f = fmap inf f ... fmap sup f
+  {-# INLINE distribute #-}
 
 infix 3 ...
 
