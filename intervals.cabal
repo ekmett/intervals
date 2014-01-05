@@ -30,6 +30,8 @@ source-repository head
 
 -- You can disable the doctests test suite with -f-test-doctests
 flag test-doctests
+  description: Enable (or disable via f-test-doctests) the doctest suite when
+               using the enable-tests option for cabal.
   default: True
   manual: True
 
