@@ -16,7 +16,7 @@ author:             Edward Kmett
 maintainer:         ekmett@gmail.com
 category:           Math
 build-type:         Custom
-cabal-version:      >=1.6
+cabal-version:      >=1.8
 tested-with:        GHC == 7.4.2, GHC == 7.6.1, GHC == 7.6.3
 extra-source-files:
   .travis.yml
@@ -30,6 +30,8 @@ source-repository head
 
 -- You can disable the doctests test suite with -f-test-doctests
 flag test-doctests
+  description: Enable (or disable via f-test-doctests) the doctest suite when
+               using the enable-tests option for cabal.
   default: True
   manual: True
 
