@@ -566,7 +566,7 @@ hull x@(I a b) y@(I a' b')
 -- >>> (5 ... 10 :: Interval Double) <! (10 ... 30 :: Interval Double)
 -- False
 --
--- >>> (20 ... 30 :: Interval Double) <! (5 ... 10 :: Interval Double) 
+-- >>> (20 ... 30 :: Interval Double) <! (5 ... 10 :: Interval Double)
 -- False
 (<!)  :: Ord a => Interval a -> Interval a -> Bool
 x <! y = sup x < inf y
@@ -580,7 +580,7 @@ x <! y = sup x < inf y
 -- >>> (5 ... 10 :: Interval Double) <=! (10 ... 30 :: Interval Double)
 -- True
 --
--- >>> (20 ... 30 :: Interval Double) <=! (5 ... 10 :: Interval Double) 
+-- >>> (20 ... 30 :: Interval Double) <=! (5 ... 10 :: Interval Double)
 -- False
 (<=!) :: Ord a => Interval a -> Interval a -> Bool
 x <=! y = sup x <= inf y
@@ -593,7 +593,7 @@ x <=! y = sup x <= inf y
 -- >>> (singleton 5 :: Interval Double) ==! (singleton 5 :: Interval Double)
 -- True
 --
--- >>> (5 ... 10 :: Interval Double) ==! (5 ... 10 :: Interval Double) 
+-- >>> (5 ... 10 :: Interval Double) ==! (5 ... 10 :: Interval Double)
 -- False
 (==!) :: Eq a => Interval a -> Interval a -> Bool
 x ==! y = sup x == inf y && inf x == sup y
@@ -601,10 +601,10 @@ x ==! y = sup x == inf y && inf x == sup y
 
 -- | For all @x@ in @X@, @y@ in @Y@. @x '/=' y@
 --
--- >>> (5 ... 15 :: Interval Double) /=! (20 ... 40 :: Interval Double) 
+-- >>> (5 ... 15 :: Interval Double) /=! (20 ... 40 :: Interval Double)
 -- True
 --
--- >>> (5 ... 15 :: Interval Double) /=! (15 ... 40 :: Interval Double) 
+-- >>> (5 ... 15 :: Interval Double) /=! (15 ... 40 :: Interval Double)
 -- False
 (/=!) :: Ord a => Interval a -> Interval a -> Bool
 x /=! y = sup x < inf y || inf x > sup y
@@ -612,10 +612,10 @@ x /=! y = sup x < inf y || inf x > sup y
 
 -- | For all @x@ in @X@, @y@ in @Y@. @x '>' y@
 --
--- >>> (20 ... 40 :: Interval Double) >! (10 ... 19 :: Interval Double) 
+-- >>> (20 ... 40 :: Interval Double) >! (10 ... 19 :: Interval Double)
 -- True
 --
--- >>> (5 ... 20 :: Interval Double) >! (15 ... 40 :: Interval Double) 
+-- >>> (5 ... 20 :: Interval Double) >! (15 ... 40 :: Interval Double)
 -- False
 (>!)  :: Ord a => Interval a -> Interval a -> Bool
 x >! y = inf x > sup y
@@ -623,10 +623,10 @@ x >! y = inf x > sup y
 
 -- | For all @x@ in @X@, @y@ in @Y@. @x '>=' y@
 --
--- >>> (20 ... 40 :: Interval Double) >=! (10 ... 20 :: Interval Double) 
+-- >>> (20 ... 40 :: Interval Double) >=! (10 ... 20 :: Interval Double)
 -- True
 --
--- >>> (5 ... 20 :: Interval Double) >=! (15 ... 40 :: Interval Double) 
+-- >>> (5 ... 20 :: Interval Double) >=! (15 ... 40 :: Interval Double)
 -- False
 (>=!) :: Ord a => Interval a -> Interval a -> Bool
 x >=! y = inf x >= sup y
@@ -634,7 +634,7 @@ x >=! y = inf x >= sup y
 
 -- | For all @x@ in @X@, @y@ in @Y@. @x `op` y@
 --
--- 
+--
 certainly :: Ord a => (forall b. Ord b => b -> b -> Bool) -> Interval a -> Interval a -> Bool
 certainly cmp l r
     | lt && eq && gt = True
@@ -653,10 +653,10 @@ certainly cmp l r
 
 -- | Check if interval @X@ totally contains interval @Y@
 --
--- >>> (20 ... 40 :: Interval Double) `contains` (25 ... 35 :: Interval Double) 
+-- >>> (20 ... 40 :: Interval Double) `contains` (25 ... 35 :: Interval Double)
 -- True
 --
--- >>> (20 ... 40 :: Interval Double) `contains` (15 ... 35 :: Interval Double) 
+-- >>> (20 ... 40 :: Interval Double) `contains` (15 ... 35 :: Interval Double)
 -- False
 contains :: Ord a => Interval a -> Interval a -> Bool
 contains x y = null y
@@ -665,10 +665,10 @@ contains x y = null y
 
 -- | Flipped version of `contains`. Check if interval @X@ a subset of interval @Y@
 --
--- >>> (25 ... 35 :: Interval Double) `isSubsetOf` (20 ... 40 :: Interval Double) 
+-- >>> (25 ... 35 :: Interval Double) `isSubsetOf` (20 ... 40 :: Interval Double)
 -- True
 --
--- >>> (20 ... 40 :: Interval Double) `isSubsetOf` (15 ... 35 :: Interval Double) 
+-- >>> (20 ... 40 :: Interval Double) `isSubsetOf` (15 ... 35 :: Interval Double)
 -- False
 isSubsetOf :: Ord a => Interval a -> Interval a -> Bool
 isSubsetOf = flip contains
