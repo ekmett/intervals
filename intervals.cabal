@@ -1,5 +1,5 @@
 name:              intervals
-version:           0.4.2
+version:           0.5
 synopsis:          Interval Arithmetic
 description:
   A 'Numeric.Interval.Interval' is a closed, convex set of floating point values.
@@ -38,7 +38,9 @@ flag test-doctests
 library
   hs-source-dirs: src
 
-  exposed-modules: Numeric.Interval
+  exposed-modules:
+    Numeric.Interval
+    Numeric.Interval.Kaucher
 
   build-depends:
     array          >= 0.3   && < 0.6,
