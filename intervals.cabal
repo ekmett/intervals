@@ -41,6 +41,7 @@ library
   exposed-modules:
     Numeric.Interval
     Numeric.Interval.Kaucher
+    Numeric.Interval.NonEmpty
 
   build-depends:
     array          >= 0.3   && < 0.6,
