@@ -118,8 +118,6 @@ fmod a b = a - q*b where
   q = realToFrac (truncate $ a / b :: Integer)
 {-# INLINE fmod #-}
 
--- | The rule of thumb is you should only use this to construct using values
--- that you took out of the interval. Otherwise, use I, to force rounding
 (...) :: a -> a -> Interval a
 (...) = I
 {-# INLINE (...) #-}
