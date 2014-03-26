@@ -121,8 +121,6 @@ fmod a b = a - q*b where
   q = realToFrac (truncate $ a / b :: Integer)
 {-# INLINE fmod #-}
 
--- | The rule of thumb is you should only use this to construct using values
--- that you took out of the interval. Otherwise, use I, to force rounding
 (...) :: Ord a => a -> a -> Interval a
 a ... b
   | a <= b = I a b
@@ -603,7 +601,8 @@ intersection _ _ = Empty
 -- 0.0 ... 85.0
 hull :: Ord a => Interval a -> Interval a -> Interval a
 hull (I a b) (I a' b') = I (min a a') (max b b')
-hull _ _ = Empty
+hull Empty x = x
+hull x Empty = x
 {-# INLINE hull #-}
 
 -- | For all @x@ in @X@, @y@ in @Y@. @x '<' y@
