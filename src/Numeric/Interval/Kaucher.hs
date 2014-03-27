@@ -40,7 +40,6 @@ module Numeric.Interval.Kaucher
   , isSubsetOf
   , certainly, (<!), (<=!), (==!), (>=!), (>!)
   , possibly, (<?), (<=?), (==?), (>=?), (>?)
-  , clamp
   , idouble
   , ifloat
   ) where
@@ -719,12 +718,6 @@ possibly cmp l r
         eq = cmp EQ EQ
         gt = cmp GT EQ
 {-# INLINE possibly #-}
-
--- | The nearest value to that supplied which is contained in the interval.
-clamp :: Ord a => Interval a -> a -> a
-clamp (I a b) x | x < a     = a
-                | x > b     = b
-                | otherwise = x
 
 -- | id function. Useful for type specification
 --
