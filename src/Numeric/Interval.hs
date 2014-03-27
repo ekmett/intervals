@@ -787,13 +787,13 @@ possibly cmp l r
         gt = cmp GT EQ
 {-# INLINE possibly #-}
 
--- | The nearest value to that supplied which is contained in the interval.
-clamp :: Ord a => Interval a -> a -> a
+-- | The nearest value to that supplied which is contained in the interval, or Nothing if the interval is empty.
+clamp :: Ord a => Interval a -> a -> Maybe a
 clamp (I a b) x
-  | x < a     = a
-  | x > b     = b
-  | otherwise = x
-clamp Empty x = x -- no meaningful answer
+  | x < a     = Just a
+  | x > b     = Just b
+  | otherwise = Just x
+clamp Empty _ = Nothing
 
 -- | id function. Useful for type specification
 --
