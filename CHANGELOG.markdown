@@ -3,6 +3,8 @@
 * The default `Numeric.Interval` now deals more conventionally with empty intervals.
 * The old "Kaucher directed interval" behavior is available as `Numeric.Interval.Kaucher`.
 * Strictly Non-Empty intervals are now contained in `Numeric.Interval.NonEmpty`
+* Renamed `bisection` to `bisect`.
+* Added `bisectIntegral`.
 
 0.4.2
 -----
