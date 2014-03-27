@@ -31,7 +31,8 @@ module Numeric.Interval.NonEmpty
   , midpoint
   , intersection
   , hull
-  , bisection
+  , bisect
+  , bisectIntegral
   , magnitude
   , mignitude
   , contains
@@ -238,14 +239,21 @@ instance (Num a, Ord a) => Num (Interval a) where
 
 -- | Bisect an interval at its midpoint.
 --
--- >>> bisection (10.0 ... 20.0)
+-- >>> bisect (10.0 ... 20.0)
 -- (10.0 ... 15.0,15.0 ... 20.0)
 --
--- >>> bisection (singleton 5.0)
+-- >>> bisect (singleton 5.0)
 -- (5.0 ... 5.0,5.0 ... 5.0)
-bisection :: Fractional a => Interval a -> (Interval a, Interval a)
-bisection (I a b) = (I a m, I m b) where m = a + (b - a) / 2
-{-# INLINE bisection #-}
+bisect :: Fractional a => Interval a -> (Interval a, Interval a)
+bisect (I a b) = (I a m, I m b) where m = a + (b - a) / 2
+{-# INLINE bisect #-}
+
+bisectIntegral :: Integral a => Interval a -> (Interval a, Interval a)
+bisectIntegral (I a b)
+  | a == m || b == m = (I a a, I b b)
+  | otherwise        = (I a m, I m b)
+  where m = a + (b - a) `div` 2
+{-# INLINE bisectIntegral #-}
 
 -- | Nearest point to the midpoint of the interval.
 --

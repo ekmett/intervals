@@ -33,7 +33,7 @@ module Numeric.Interval.Kaucher
   , midpoint
   , intersection
   , hull
-  , bisection
+  , bisect
   , magnitude
   , mignitude
   , contains
@@ -266,18 +266,17 @@ instance (Num a, Ord a) => Num (Interval a) where
 
 -- | Bisect an interval at its midpoint.
 --
--- >>> bisection (10.0 ... 20.0)
+-- >>> bisect (10.0 ... 20.0)
 -- (10.0 ... 15.0,15.0 ... 20.0)
 --
--- >>> bisection (singleton 5.0)
+-- >>> bisect (singleton 5.0)
 -- (5.0 ... 5.0,5.0 ... 5.0)
 --
--- >>> bisection empty
+-- >>> bisect empty
 -- (NaN ... NaN,NaN ... NaN)
-bisection :: Fractional a => Interval a -> (Interval a, Interval a)
-bisection x = (inf x ... m, m ... sup x)
-  where m = midpoint x
-{-# INLINE bisection #-}
+bisect :: Fractional a => Interval a -> (Interval a, Interval a)
+bisect x = (inf x ... m, m ... sup x) where m = midpoint x
+{-# INLINE bisect #-}
 
 -- | Nearest point to the midpoint of the interval.
 --
