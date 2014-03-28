@@ -4,20 +4,20 @@
 #if defined(__GLASGOW_HASKELL) && __GLASGOW_HASKELL__ >= 704
 {-# LANGUAGE DeriveGeneric #-}
 #endif
+{-# OPTIONS_HADDOCK not-home #-}
 -----------------------------------------------------------------------------
 -- |
--- Module      :  Numeric.Interval
--- Copyright   :  (c) Edward Kmett 2010-2014
+-- Module      :  Numeric.Interval.Internal
+-- Copyright   :  (c) Edward Kmett 2010-2013
 -- License     :  BSD3
 -- Maintainer  :  ekmett@gmail.com
 -- Stability   :  experimental
 -- Portability :  DeriveDataTypeable
 --
--- "Directed" Interval arithmetic
+-- Interval arithmetic
 --
 -----------------------------------------------------------------------------
-
-module Numeric.Interval.Kaucher
+module Numeric.Interval.Internal
   ( Interval(..)
   , (...)
   , interval
@@ -35,24 +35,21 @@ module Numeric.Interval.Kaucher
   , intersection
   , hull
   , bisect
+  , bisectIntegral
   , magnitude
   , mignitude
   , contains
   , isSubsetOf
   , certainly, (<!), (<=!), (==!), (>=!), (>!)
   , possibly, (<?), (<=?), (==?), (>=?), (>?)
-  , clamp
   , idouble
   , ifloat
   ) where
 
-import Control.Applicative hiding (empty)
 import Data.Data
-import Data.Distributive
 import Data.Foldable hiding (minimum, maximum, elem, notElem)
 import Data.Function (on)
 import Data.Monoid
-import Data.Traversable
 #if defined(__GLASGOW_HASKELL) && __GLASGOW_HASKELL__ >= 704
 import GHC.Generics
 #endif
@@ -60,7 +57,7 @@ import Prelude hiding (null, elem, notElem)
 
 -- $setup
 
-data Interval a = I !a !a deriving
+data Interval a = I !a !a | Empty deriving
   ( Data
   , Typeable
 #if defined(__GLASGOW_HASKELL) && __GLASGOW_HASKELL__ >= 704
@@ -71,35 +68,10 @@ data Interval a = I !a !a deriving
 #endif
   )
 
-instance Functor Interval where
-  fmap f (I a b) = I (f a) (f b)
-  {-# INLINE fmap #-}
-
 instance Foldable Interval where
   foldMap f (I a b) = f a `mappend` f b
+  foldMap _ Empty = mempty
   {-# INLINE foldMap #-}
-
-instance Traversable Interval where
-  traverse f (I a b) = I <$> f a <*> f b
-  {-# INLINE traverse #-}
-
-instance Applicative Interval where
-  pure a = I a a
-  {-# INLINE pure #-}
-  I f g <*> I a b = I (f a) (g b)
-  {-# INLINE (<*>) #-}
-
-instance Monad Interval where
-  return a = I a a
-  {-# INLINE return #-}
-  I a b >>= f = I a' b' where
-    I a' _ = f a
-    I _ b' = f b
-  {-# INLINE (>>=) #-}
-
-instance Distributive Interval where
-  distribute f = fmap inf f ... fmap sup f
-  {-# INLINE distribute #-}
 
 infix 3 ...
 
@@ -111,6 +83,12 @@ posInfinity :: Fractional a => a
 posInfinity = 1/0
 {-# INLINE posInfinity #-}
 
+interval :: Ord a => a -> a -> Maybe (Interval a)
+interval a b
+  | a <= b = Just $ I a b
+  | otherwise = Nothing
+{-# INLINE interval #-}
+
 nan :: Fractional a => a
 nan = 0/0
 
@@ -119,32 +97,26 @@ fmod a b = a - q*b where
   q = realToFrac (truncate $ a / b :: Integer)
 {-# INLINE fmod #-}
 
--- | Create a directed interval.
-(...) :: a -> a -> Interval a
-(...) = I
+(...) :: Ord a => a -> a -> Interval a
+a ... b
+  | a <= b = I a b
+  | otherwise = Empty
 {-# INLINE (...) #-}
-
--- | Try to create a non-empty interval.
-interval :: Ord a => a -> a -> Maybe (Interval a)
-interval a b
-  | a <= b = Just $ I a b
-  | otherwise = Nothing
-
 
 -- | The whole real number line
 --
 -- >>> whole
 -- -Infinity ... Infinity
 whole :: Fractional a => Interval a
-whole = negInfinity ... posInfinity
+whole = I negInfinity posInfinity
 {-# INLINE whole #-}
 
 -- | An empty interval
 --
 -- >>> empty
--- NaN ... NaN
+-- Empty
 empty :: Fractional a => Interval a
-empty = nan ... nan
+empty = Empty
 {-# INLINE empty #-}
 
 -- | negation handles NaN properly
@@ -157,8 +129,9 @@ empty = nan ... nan
 --
 -- >>> null empty
 -- True
-null :: Ord a => Interval a -> Bool
-null x = not (inf x <= sup x)
+null :: Interval a -> Bool
+null Empty = True
+null _ = False
 {-# INLINE null #-}
 
 -- | A singleton point
@@ -166,23 +139,25 @@ null x = not (inf x <= sup x)
 -- >>> singleton 1
 -- 1 ... 1
 singleton :: a -> Interval a
-singleton a = a ... a
+singleton a = I a a
 {-# INLINE singleton #-}
 
 -- | The infinumum (lower bound) of an interval
 --
 -- >>> inf (1 ... 20)
 -- 1
-inf :: Interval a -> a
+inf :: Fractional a => Interval a -> a
 inf (I a _) = a
+inf Empty = nan
 {-# INLINE inf #-}
 
 -- | The supremum (upper bound) of an interval
 --
 -- >>> sup (1 ... 20)
 -- 20
-sup :: Interval a -> a
+sup :: Fractional a => Interval a -> a
 sup (I _ b) = b
+sup Empty = nan
 {-# INLINE sup #-}
 
 -- | Is the interval a singleton point?
@@ -195,7 +170,8 @@ sup (I _ b) = b
 -- >>> singular (1.0 ... 20.0)
 -- False
 singular :: Ord a => Interval a -> Bool
-singular x = not (null x) && inf x == sup x
+singular Empty = False
+singular (I a b) = a == b
 {-# INLINE singular #-}
 
 instance Eq a => Eq (Interval a) where
@@ -203,6 +179,7 @@ instance Eq a => Eq (Interval a) where
   {-# INLINE (==) #-}
 
 instance Show a => Show (Interval a) where
+  showsPrec _ Empty = showString "Empty"
   showsPrec n (I a b) =
     showParen (n > 3) $
       showsPrec 3 a .
@@ -218,9 +195,10 @@ instance Show a => Show (Interval a) where
 -- 0
 --
 -- >>> width empty
--- NaN
+-- 0
 width :: Num a => Interval a -> a
 width (I a b) = b - a
+width Empty = 0
 {-# INLINE width #-}
 
 -- | Magnitude
@@ -233,8 +211,12 @@ width (I a b) = b - a
 --
 -- >>> magnitude (singleton 5)
 -- 5
+--
+-- >>> magnitude empty
+-- 0
 magnitude :: (Num a, Ord a) => Interval a -> a
-magnitude x = (max `on` abs) (inf x) (sup x)
+magnitude (I a b) = on max abs a b
+magnitude Empty = 0
 {-# INLINE magnitude #-}
 
 -- | \"mignitude\"
@@ -247,24 +229,32 @@ magnitude x = (max `on` abs) (inf x) (sup x)
 --
 -- >>> mignitude (singleton 5)
 -- 5
+--
+-- >>> mignitude empty
+-- 0
 mignitude :: (Num a, Ord a) => Interval a -> a
-mignitude x = (min `on` abs) (inf x) (sup x)
+mignitude (I a b) = on min abs a b
+mignitude Empty = 0
 {-# INLINE mignitude #-}
 
 instance (Num a, Ord a) => Num (Interval a) where
   I a b + I a' b' = (a + a') ... (b + b')
+  _ + _ = Empty
   {-# INLINE (+) #-}
   I a b - I a' b' = (a - b') ... (b - a')
+  _ - _ = Empty
   {-# INLINE (-) #-}
   I a b * I a' b' =
     minimum [a * a', a * b', b * a', b * b']
     ...
     maximum [a * a', a * b', b * a', b * b']
+  _ * _ = Empty
   {-# INLINE (*) #-}
   abs x@(I a b)
     | a >= 0    = x
     | b <= 0    = negate x
     | otherwise = 0 ... max (- a) b
+  abs Empty = Empty
   {-# INLINE abs #-}
 
   signum = increasing signum
@@ -284,8 +274,16 @@ instance (Num a, Ord a) => Num (Interval a) where
 -- >>> bisect empty
 -- (NaN ... NaN,NaN ... NaN)
 bisect :: Fractional a => Interval a -> (Interval a, Interval a)
-bisect x = (inf x ... m, m ... sup x) where m = midpoint x
+bisect Empty = (Empty,Empty)
+bisect (I a b) = (I a m, I m b) where m = a + (b - a) / 2
 {-# INLINE bisect #-}
+
+bisectIntegral :: Integral a => Interval a -> (Interval a, Interval a)
+bisectIntegral Empty = (Empty, Empty)
+bisectIntegral (I a b)
+  | a == m || b == m = (I a a, I b b)
+  | otherwise        = (I a m, I m b)
+  where m = a + (b - a) `div` 2
 
 -- | Nearest point to the midpoint of the interval.
 --
@@ -298,7 +296,8 @@ bisect x = (inf x ... m, m ... sup x) where m = midpoint x
 -- >>> midpoint empty
 -- NaN
 midpoint :: Fractional a => Interval a -> a
-midpoint x = inf x + (sup x - inf x) / 2
+midpoint (I a b) = a + (b - a) / 2
+midpoint Empty = nan
 {-# INLINE midpoint #-}
 
 -- | Determine if a point is in the interval.
@@ -319,7 +318,8 @@ midpoint x = inf x + (sup x - inf x) / 2
 -- False
 --
 elem :: Ord a => a -> Interval a -> Bool
-elem x xs = x >= inf xs && x <= sup xs
+elem x (I a b) = x >= a && x <= b
+elem _ Empty = False
 {-# INLINE elem #-}
 
 -- | Determine if a point is not included in the interval
@@ -340,26 +340,31 @@ notElem x xs = not (elem x xs)
 
 -- | 'realToFrac' will use the midpoint
 instance Real a => Real (Interval a) where
-  toRational x
-    | null x   = nan
-    | otherwise = a + (b - a) / 2
-    where
-      a = toRational (inf x)
-      b = toRational (sup x)
+  toRational Empty = nan
+  toRational (I ra rb) = a + (b - a) / 2 where
+    a = toRational ra
+    b = toRational rb
   {-# INLINE toRational #-}
 
 instance Ord a => Ord (Interval a) where
-  compare x y
-    | sup x < inf y = LT
-    | inf x > sup y = GT
-    | sup x == inf y && inf x == sup y = EQ
+  compare Empty Empty = EQ
+  compare Empty _ = LT
+  compare _ Empty = GT
+  compare (I ax bx) (I ay by)
+    | bx < ay = LT
+    | ax > by = GT
+    | bx == ay && ax == by = EQ
     | otherwise = error "Numeric.Interval.compare: ambiguous comparison"
   {-# INLINE compare #-}
 
   max (I a b) (I a' b') = max a a' ... max b b'
+  max Empty i = i
+  max i Empty = i
   {-# INLINE max #-}
 
   min (I a b) (I a' b') = min a a' ... min b b'
+  min Empty _ = Empty
+  min _ Empty = Empty
   {-# INLINE min #-}
 
 -- @'divNonZero' X Y@ assumes @0 `'notElem'` Y@
@@ -368,19 +373,22 @@ divNonZero (I a b) (I a' b') =
   minimum [a / a', a / b', b / a', b / b']
   ...
   maximum [a / a', a / b', b / a', b / b']
+divNonZero _ _ = Empty
 
 -- @'divPositive' X y@ assumes y > 0, and divides @X@ by [0 ... y]
 divPositive :: (Fractional a, Ord a) => Interval a -> a -> Interval a
+divPositive Empty _ = Empty
 divPositive x@(I a b) y
   | a == 0 && b == 0 = x
   -- b < 0 || isNegativeZero b = negInfinity ... ( b / y)
-  | b < 0 = negInfinity ... ( b / y)
+  | b < 0 = negInfinity ... (b / y)
   | a < 0 = whole
   | otherwise = (a / y) ... posInfinity
 {-# INLINE divPositive #-}
 
 -- divNegative assumes y < 0 and divides the interval @X@ by [y ... 0]
 divNegative :: (Fractional a, Ord a) => Interval a -> a -> Interval a
+divNegative Empty _ = Empty
 divNegative x@(I a b) y
   | a == 0 && b == 0 = - x -- flip negative zeros
   -- b < 0 || isNegativeZero b = (b / y) ... posInfinity
@@ -390,25 +398,28 @@ divNegative x@(I a b) y
 {-# INLINE divNegative #-}
 
 divZero :: (Fractional a, Ord a) => Interval a -> Interval a
-divZero x
-  | inf x == 0 && sup x == 0 = x
-  | otherwise = whole
+divZero x@(I a b)
+  | a == 0 && b == 0 = x
+  | otherwise        = whole
+divZero Empty = Empty
 {-# INLINE divZero #-}
 
 instance (Fractional a, Ord a) => Fractional (Interval a) where
   -- TODO: check isNegativeZero properly
-  x / y
+  _ / Empty = Empty
+  x / y@(I a b)
     | 0 `notElem` y = divNonZero x y
     | iz && sz  = empty -- division by 0
-    | iz        = divPositive x (inf y)
-    |       sz  = divNegative x (sup y)
+    | iz        = divPositive x a
+    |       sz  = divNegative x b
     | otherwise = divZero x
     where
-      iz = inf y == 0
-      sz = sup y == 0
+      iz = a == 0
+      sz = b == 0
+  recip Empty = Empty
   recip (I a b)   = on min recip a b ... on max recip a b
   {-# INLINE recip #-}
-  fromRational r  = let r' = fromRational r in r' ... r'
+  fromRational r  = let r' = fromRational r in I r' r'
   {-# INLINE fromRational #-}
 
 instance RealFrac a => RealFrac (Interval a) where
@@ -431,9 +442,10 @@ instance (RealFloat a, Ord a) => Floating (Interval a) where
   exp = increasing exp
   {-# INLINE exp #-}
   log (I a b) = (if a > 0 then log a else negInfinity) ... log b
+  log Empty = Empty
   {-# INLINE log #-}
+  cos Empty = Empty
   cos x
-    | null x = empty
     | width t >= pi = (-1) ... 1
     | inf t >= pi = - cos (t - pi)
     | sup t <= pi = decreasing cos t
@@ -442,12 +454,11 @@ instance (RealFloat a, Ord a) => Floating (Interval a) where
     where
       t = fmod x (pi * 2)
   {-# INLINE cos #-}
-  sin x
-    | null x = empty
-    | otherwise = cos (x - pi / 2)
+  sin Empty = Empty
+  sin x = cos (x - pi / 2)
   {-# INLINE sin #-}
+  tan Empty = Empty
   tan x
-    | null x = empty
     | inf t' <= - pi / 2 || sup t' >= pi / 2 = whole
     | otherwise = increasing tan x
     where
@@ -455,8 +466,9 @@ instance (RealFloat a, Ord a) => Floating (Interval a) where
       t' | t >= pi / 2 = t - pi
          | otherwise    = t
   {-# INLINE tan #-}
-  asin x@(I a b)
-    | null x || b < -1 || a > 1 = empty
+  asin Empty = Empty
+  asin (I a b)
+    | b < -1 || a > 1 = Empty
     | otherwise =
       (if a <= -1 then -halfPi else asin a)
       ...
@@ -464,8 +476,9 @@ instance (RealFloat a, Ord a) => Floating (Interval a) where
     where
       halfPi = pi / 2
   {-# INLINE asin #-}
-  acos x@(I a b)
-    | null x || b < -1 || a > 1 = empty
+  acos Empty = Empty
+  acos (I a b)
+    | b < -1 || a > 1 = Empty
     | otherwise =
       (if b >= 1 then 0 else acos b)
       ...
@@ -475,8 +488,8 @@ instance (RealFloat a, Ord a) => Floating (Interval a) where
   {-# INLINE atan #-}
   sinh = increasing sinh
   {-# INLINE sinh #-}
+  cosh Empty = Empty
   cosh x@(I a b)
-    | null x = empty
     | b < 0  = decreasing cosh x
     | a >= 0 = increasing cosh x
     | otherwise  = I 0 $ cosh $ if - a > b
@@ -487,14 +500,16 @@ instance (RealFloat a, Ord a) => Floating (Interval a) where
   {-# INLINE tanh #-}
   asinh = increasing asinh
   {-# INLINE asinh #-}
-  acosh x@(I a b)
-    | null x || b < 1 = empty
+  acosh Empty = Empty
+  acosh (I a b)
+    | b < 1 = Empty
     | otherwise = I lo $ acosh b
     where lo | a <= 1 = 0
              | otherwise = acosh a
   {-# INLINE acosh #-}
-  atanh x@(I a b)
-    | null x || b < -1 || a > 1 = empty
+  atanh Empty = Empty
+  atanh (I a b)
+    | b < -1 || a > 1 = Empty
     | otherwise =
       (if a <= - 1 then negInfinity else atanh a)
       ...
@@ -503,11 +518,13 @@ instance (RealFloat a, Ord a) => Floating (Interval a) where
 
 -- | lift a monotone increasing function over a given interval
 increasing :: (a -> b) -> Interval a -> Interval b
-increasing f (I a b) = f a ... f b
+increasing f (I a b) = I (f a) (f b)
+increasing _ Empty = Empty
 
 -- | lift a monotone decreasing function over a given interval
 decreasing :: (a -> b) -> Interval a -> Interval b
-decreasing f (I a b) = f b ... f a
+decreasing f (I a b) = I (f b) (f a)
+decreasing _ Empty = Empty
 
 -- | We have to play some semantic games to make these methods make sense.
 -- Most compute with the midpoint of the interval.
@@ -526,17 +543,23 @@ instance RealFloat a => RealFloat (Interval a) where
       (ms,es) = decodeFloat (sup x)
       a = encodeFloat mi (ei - em - floatDigits x)
       b = encodeFloat ms (es - em - floatDigits x)
-  scaleFloat n x = scaleFloat n (inf x) ... scaleFloat n (sup x)
-  isNaN x = isNaN (inf x) || isNaN (sup x)
-  isInfinite x = isInfinite (inf x) || isInfinite (sup x)
-  isDenormalized x = isDenormalized (inf x) || isDenormalized (sup x)
+  scaleFloat _ Empty = Empty
+  scaleFloat n (I a b) = I (scaleFloat n a) (scaleFloat n b)
+  isNaN (I a b) = isNaN a || isNaN b
+  isNaN Empty = True
+  isInfinite (I a b) = isInfinite a || isInfinite b
+  isInfinite Empty = False
+  isDenormalized (I a b) = isDenormalized a || isDenormalized b
+  isDenormalized Empty = False
   -- contains negative zero
-  isNegativeZero x = not (inf x > 0)
-                  && not (sup x < 0)
-                  && (  (sup x == 0 && (inf x < 0 || isNegativeZero (inf x)))
-                     || (inf x == 0 && isNegativeZero (inf x))
-                     || (inf x < 0 && sup x >= 0))
-  isIEEE x = isIEEE (inf x) && isIEEE (sup x)
+  isNegativeZero (I a b) = not (a > 0)
+                  && not (b < 0)
+                  && (  (b == 0 && (a < 0 || isNegativeZero a))
+                     || (a == 0 && isNegativeZero a)
+                     || (a < 0 && b >= 0))
+  isNegativeZero Empty = False
+  isIEEE _ = False
+
   atan2 = error "unimplemented"
 
 -- TODO: (^), (^^) to give tighter bounds
@@ -547,8 +570,9 @@ instance RealFloat a => RealFloat (Interval a) where
 -- 5.0 ... 10.0
 intersection :: (Fractional a, Ord a) => Interval a -> Interval a -> Interval a
 intersection x@(I a b) y@(I a' b')
-  | x /=! y = empty
-  | otherwise = max a a' ... min b b'
+  | x /=! y   = Empty
+  | otherwise = I (max a a') (min b b')
+intersection _ _ = Empty
 {-# INLINE intersection #-}
 
 -- | Calculate the convex hull of two intervals
@@ -559,10 +583,9 @@ intersection x@(I a b) y@(I a' b')
 -- >>> hull (15 ... 85 :: Interval Double) (0 ... 10 :: Interval Double)
 -- 0.0 ... 85.0
 hull :: Ord a => Interval a -> Interval a -> Interval a
-hull x@(I a b) y@(I a' b')
-  | null x = y
-  | null y = x
-  | otherwise = min a a' ... max b b'
+hull (I a b) (I a' b') = I (min a a') (max b b')
+hull Empty x = x
+hull x Empty = x
 {-# INLINE hull #-}
 
 -- | For all @x@ in @X@, @y@ in @Y@. @x '<' y@
@@ -576,7 +599,9 @@ hull x@(I a b) y@(I a' b')
 -- >>> (20 ... 30 :: Interval Double) <! (5 ... 10 :: Interval Double)
 -- False
 (<!)  :: Ord a => Interval a -> Interval a -> Bool
-x <! y = sup x < inf y
+Empty <! _ = True
+_ <! Empty = True
+I _ bx <! I ay _ = bx < ay
 {-# INLINE (<!) #-}
 
 -- | For all @x@ in @X@, @y@ in @Y@. @x '<=' y@
@@ -590,12 +615,14 @@ x <! y = sup x < inf y
 -- >>> (20 ... 30 :: Interval Double) <=! (5 ... 10 :: Interval Double)
 -- False
 (<=!) :: Ord a => Interval a -> Interval a -> Bool
-x <=! y = sup x <= inf y
+Empty <=! _ = True
+_ <=! Empty = True
+I _ bx <=! I ay _ = bx <= ay
 {-# INLINE (<=!) #-}
 
 -- | For all @x@ in @X@, @y@ in @Y@. @x '==' y@
 --
--- Only singleton intervals return true
+-- Only singleton intervals or empty intervals can return true
 --
 -- >>> (singleton 5 :: Interval Double) ==! (singleton 5 :: Interval Double)
 -- True
@@ -603,7 +630,9 @@ x <=! y = sup x <= inf y
 -- >>> (5 ... 10 :: Interval Double) ==! (5 ... 10 :: Interval Double)
 -- False
 (==!) :: Eq a => Interval a -> Interval a -> Bool
-x ==! y = sup x == inf y && inf x == sup y
+Empty ==! _ = True
+_ ==! Empty = True
+I ax bx ==! I ay by = bx == ay && ax == by
 {-# INLINE (==!) #-}
 
 -- | For all @x@ in @X@, @y@ in @Y@. @x '/=' y@
@@ -614,7 +643,9 @@ x ==! y = sup x == inf y && inf x == sup y
 -- >>> (5 ... 15 :: Interval Double) /=! (15 ... 40 :: Interval Double)
 -- False
 (/=!) :: Ord a => Interval a -> Interval a -> Bool
-x /=! y = sup x < inf y || inf x > sup y
+Empty /=! _ = True
+_ /=! Empty = True
+I ax bx /=! I ay by = bx < ay || ax > by
 {-# INLINE (/=!) #-}
 
 -- | For all @x@ in @X@, @y@ in @Y@. @x '>' y@
@@ -625,7 +656,9 @@ x /=! y = sup x < inf y || inf x > sup y
 -- >>> (5 ... 20 :: Interval Double) >! (15 ... 40 :: Interval Double)
 -- False
 (>!)  :: Ord a => Interval a -> Interval a -> Bool
-x >! y = inf x > sup y
+Empty >! _ = True
+_ >! Empty = True
+I ax _ >! I _ by = ax > by
 {-# INLINE (>!) #-}
 
 -- | For all @x@ in @X@, @y@ in @Y@. @x '>=' y@
@@ -636,12 +669,12 @@ x >! y = inf x > sup y
 -- >>> (5 ... 20 :: Interval Double) >=! (15 ... 40 :: Interval Double)
 -- False
 (>=!) :: Ord a => Interval a -> Interval a -> Bool
-x >=! y = inf x >= sup y
+Empty >=! _ = True
+_ >=! Empty = True
+I ax _ >=! I _ by = ax >= by
 {-# INLINE (>=!) #-}
 
 -- | For all @x@ in @X@, @y@ in @Y@. @x `op` y@
---
---
 certainly :: Ord a => (forall b. Ord b => b -> b -> Bool) -> Interval a -> Interval a -> Bool
 certainly cmp l r
     | lt && eq && gt = True
@@ -653,9 +686,9 @@ certainly cmp l r
     |             gt = l >!  r
     | otherwise      = False
     where
-        lt = cmp LT EQ
-        eq = cmp EQ EQ
-        gt = cmp GT EQ
+        lt = cmp False True
+        eq = cmp True True
+        gt = cmp True False
 {-# INLINE certainly #-}
 
 -- | Check if interval @X@ totally contains interval @Y@
@@ -666,8 +699,9 @@ certainly cmp l r
 -- >>> (20 ... 40 :: Interval Double) `contains` (15 ... 35 :: Interval Double)
 -- False
 contains :: Ord a => Interval a -> Interval a -> Bool
-contains x y = null y
-            || (not (null x) && inf x <= inf y && sup y <= sup x)
+contains _ Empty = True
+contains (I ax bx) (I ay by) = ax <= ay && by <= bx
+contains Empty I{} = False
 {-# INLINE contains #-}
 
 -- | Flipped version of `contains`. Check if interval @X@ a subset of interval @Y@
@@ -683,32 +717,40 @@ isSubsetOf = flip contains
 
 -- | Does there exist an @x@ in @X@, @y@ in @Y@ such that @x '<' y@?
 (<?) :: Ord a => Interval a -> Interval a -> Bool
-x <? y = inf x < sup y
+Empty <? _ = False
+_ <? Empty = False
+I ax _ <? I _ by = ax < by
 {-# INLINE (<?) #-}
 
 -- | Does there exist an @x@ in @X@, @y@ in @Y@ such that @x '<=' y@?
 (<=?) :: Ord a => Interval a -> Interval a -> Bool
-x <=? y = inf x <= sup y
+Empty <=? _ = False
+_ <=? Empty = False
+I ax _ <=? I _ by = ax <= by
 {-# INLINE (<=?) #-}
 
 -- | Does there exist an @x@ in @X@, @y@ in @Y@ such that @x '==' y@?
 (==?) :: Ord a => Interval a -> Interval a -> Bool
-x ==? y = inf x <= sup y && sup x >= inf y
+I ax bx ==? I ay by = ax <= by && bx >= ay
+_ ==? _ = False
 {-# INLINE (==?) #-}
 
 -- | Does there exist an @x@ in @X@, @y@ in @Y@ such that @x '/=' y@?
 (/=?) :: Eq a => Interval a -> Interval a -> Bool
-x /=? y = inf x /= sup y || sup x /= inf y
+I ax bx /=? I ay by = ax /= by || bx /= ay
+_ /=? _ = False
 {-# INLINE (/=?) #-}
 
 -- | Does there exist an @x@ in @X@, @y@ in @Y@ such that @x '>' y@?
 (>?) :: Ord a => Interval a -> Interval a -> Bool
-x >? y = sup x > inf y
+I _ bx >? I ay _ = bx > ay
+_ >? _ = False
 {-# INLINE (>?) #-}
 
 -- | Does there exist an @x@ in @X@, @y@ in @Y@ such that @x '>=' y@?
 (>=?) :: Ord a => Interval a -> Interval a -> Bool
-x >=? y = sup x >= inf y
+I _ bx >=? I ay _ = bx >= ay
+_ >=? _ = False
 {-# INLINE (>=?) #-}
 
 -- | Does there exist an @x@ in @X@, @y@ in @Y@ such that @x `op` y@?
@@ -728,12 +770,6 @@ possibly cmp l r
         gt = cmp GT EQ
 {-# INLINE possibly #-}
 
--- | The nearest value to that supplied which is contained in the interval.
-clamp :: Ord a => Interval a -> a -> a
-clamp (I a b) x | x < a     = a
-                | x > b     = b
-                | otherwise = x
-
 -- | id function. Useful for type specification
 --
 -- >>> :t idouble (1 ... 3)
@@ -750,6 +786,5 @@ ifloat = id
 
 -- Bugs:
 -- sin 1 :: Interval Double
-
 
 default (Integer,Double)

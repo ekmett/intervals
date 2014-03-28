@@ -1,5 +1,5 @@
 name:              intervals
-version:           0.5
+version:           0.5.1
 synopsis:          Interval Arithmetic
 description:
   A 'Numeric.Interval.Interval' is a closed, convex set of floating point values.
@@ -40,8 +40,10 @@ library
 
   exposed-modules:
     Numeric.Interval
+    Numeric.Interval.Internal
     Numeric.Interval.Kaucher
     Numeric.Interval.NonEmpty
+    Numeric.Interval.NonEmpty.Internal
 
   build-depends:
     array          >= 0.3   && < 0.6,
