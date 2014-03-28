@@ -20,6 +20,7 @@
 module Numeric.Interval.NonEmpty
   ( Interval
   , (...)
+  , interval
   , whole
   , singleton
   , elem

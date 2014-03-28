@@ -20,6 +20,7 @@
 module Numeric.Interval.Internal
   ( Interval(..)
   , (...)
+  , interval
   , whole
   , empty
   , null
@@ -81,6 +82,12 @@ negInfinity = (-1)/0
 posInfinity :: Fractional a => a
 posInfinity = 1/0
 {-# INLINE posInfinity #-}
+
+interval :: Ord a => a -> a -> Maybe (Interval a)
+interval a b
+  | a <= b = Just $ I a b
+  | otherwise = Nothing
+{-# INLINE interval #-}
 
 nan :: Fractional a => a
 nan = 0/0

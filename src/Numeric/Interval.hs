@@ -12,6 +12,7 @@
 module Numeric.Interval
   ( Interval
   , (...)
+  , interval
   , whole
   , empty
   , null

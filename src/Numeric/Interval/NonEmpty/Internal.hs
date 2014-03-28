@@ -19,6 +19,7 @@
 module Numeric.Interval.NonEmpty.Internal
   ( Interval(..)
   , (...)
+  , interval
   , whole
   , singleton
   , elem
@@ -84,11 +85,19 @@ fmod a b = a - q*b where
   q = realToFrac (truncate $ a / b :: Integer)
 {-# INLINE fmod #-}
 
+-- | Create a non-empty interval, turning it around if necessary
 (...) :: Ord a => a -> a -> Interval a
 a ... b
   | a <= b = I a b
   | otherwise = I b a
 {-# INLINE (...) #-}
+
+-- | Try to create a non-empty interval.
+interval :: Ord a => a -> a -> Maybe (Interval a)
+interval a b
+  | a <= b = Just $ I a b
+  | otherwise = Nothing
+
 
 -- | The whole real number line
 --

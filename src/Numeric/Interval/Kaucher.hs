@@ -20,6 +20,7 @@
 module Numeric.Interval.Kaucher
   ( Interval(..)
   , (...)
+  , interval
   , whole
   , empty
   , null
@@ -118,9 +119,17 @@ fmod a b = a - q*b where
   q = realToFrac (truncate $ a / b :: Integer)
 {-# INLINE fmod #-}
 
+-- | Create a directed interval.
 (...) :: a -> a -> Interval a
 (...) = I
 {-# INLINE (...) #-}
+
+-- | Try to create a non-empty interval.
+interval :: Ord a => a -> a -> Maybe (Interval a)
+interval a b
+  | a <= b = Just $ I a b
+  | otherwise = Nothing
+
 
 -- | The whole real number line
 --
