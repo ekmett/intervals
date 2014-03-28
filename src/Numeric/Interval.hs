@@ -45,12 +45,10 @@ module Numeric.Interval
   , ifloat
   ) where
 
-import Control.Applicative hiding (empty)
 import Data.Data
 import Data.Foldable hiding (minimum, maximum, elem, notElem)
 import Data.Function (on)
 import Data.Monoid
-import Data.Traversable
 #if defined(__GLASGOW_HASKELL) && __GLASGOW_HASKELL__ >= 704
 import GHC.Generics
 #endif
@@ -69,39 +67,10 @@ data Interval a = I !a !a | Empty deriving
 #endif
   )
 
-instance Functor Interval where
-  fmap f (I a b) = I (f a) (f b)
-  fmap _ Empty = Empty
-  {-# INLINE fmap #-}
-
 instance Foldable Interval where
   foldMap f (I a b) = f a `mappend` f b
   foldMap _ Empty = mempty
   {-# INLINE foldMap #-}
-
-instance Traversable Interval where
-  traverse f (I a b) = I <$> f a <*> f b
-  traverse _ Empty = pure Empty
-  {-# INLINE traverse #-}
-
-instance Applicative Interval where
-  pure a = I a a
-  {-# INLINE pure #-}
-  Empty <*> _ = Empty
-  _ <*> Empty = Empty
-  I f g <*> I a b = I (f a) (g b)
-  {-# INLINE (<*>) #-}
-
-instance Monad Interval where
-  return a = I a a
-  {-# INLINE return #-}
-  Empty >>= _ = Empty
-  I a b >>= f = case f a of
-    Empty -> Empty
-    I a' _ -> case f b of
-      I _ b' -> I a' b'
-      Empty  -> Empty
-  {-# INLINE (>>=) #-}
 
 infix 3 ...
 
