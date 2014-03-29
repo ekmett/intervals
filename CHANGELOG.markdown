@@ -1,3 +1,11 @@
+0.5.1.1
+-------
+* Misc `doctest` fixes.
+
+0.5.1
+-----
+* Added `interval` to facilitate the construction of known non-empty intervals.
+
 0.5
 ---
 * The default `Numeric.Interval` now deals more conventionally with empty intervals.
