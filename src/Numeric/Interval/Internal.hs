@@ -115,7 +115,7 @@ whole = I negInfinity posInfinity
 --
 -- >>> empty
 -- Empty
-empty :: Fractional a => Interval a
+empty :: Ord a => Interval a
 empty = Empty
 {-# INLINE empty #-}
 
@@ -271,8 +271,8 @@ instance (Num a, Ord a) => Num (Interval a) where
 -- >>> bisect (singleton 5.0)
 -- (5.0 ... 5.0,5.0 ... 5.0)
 --
--- >>> bisect empty
--- (NaN ... NaN,NaN ... NaN)
+-- >>> bisect Empty
+-- (Empty,Empty)
 bisect :: Fractional a => Interval a -> (Interval a, Interval a)
 bisect Empty = (Empty,Empty)
 bisect (I a b) = (I a m, I m b) where m = a + (b - a) / 2
