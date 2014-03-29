@@ -144,8 +144,8 @@ singleton a = I a a
 
 -- | The infinumum (lower bound) of an interval
 --
--- >>> inf (1 ... 20)
--- 1
+-- >>> inf (1.0 ... 20.0)
+-- 1.0
 inf :: Fractional a => Interval a -> a
 inf (I a _) = a
 inf Empty = nan
@@ -153,8 +153,8 @@ inf Empty = nan
 
 -- | The supremum (upper bound) of an interval
 --
--- >>> sup (1 ... 20)
--- 20
+-- >>> sup (1.0 ... 20.0)
+-- 20.0
 sup :: Fractional a => Interval a -> a
 sup (I _ b) = b
 sup Empty = nan
