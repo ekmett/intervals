@@ -1,3 +1,7 @@
+0.6
+---
+* Added `Numeric.Interval.Exception`. For consistency, we tend to throw exceptions now instead of rely on `NaN` when working with empty intervals.
+
 0.5.1.1
 -------
 * Misc `doctest` fixes.
