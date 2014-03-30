@@ -179,7 +179,7 @@ width (I a b) = b - a
 -- >>> magnitude (singleton 5)
 -- 5
 magnitude :: (Num a, Ord a) => Interval a -> a
-magnitude (I a b) = on max abs a b
+magnitude = sup . abs
 {-# INLINE magnitude #-}
 
 -- | \"mignitude\"
@@ -188,12 +188,12 @@ magnitude (I a b) = on max abs a b
 -- 1
 --
 -- >>> mignitude (-20 ... 10)
--- 10
+-- 0
 --
 -- >>> mignitude (singleton 5)
 -- 5
 mignitude :: (Num a, Ord a) => Interval a -> a
-mignitude (I a b) = on min abs a b
+mignitude = inf . abs
 {-# INLINE mignitude #-}
 
 instance (Num a, Ord a) => Num (Interval a) where

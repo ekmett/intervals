@@ -91,9 +91,6 @@ interval a b
   | otherwise = Nothing
 {-# INLINE interval #-}
 
-nan :: Fractional a => a
-nan = 0/0
-
 fmod :: RealFrac a => a -> a -> a
 fmod a b = a - q*b where
   q = realToFrac (truncate $ a / b :: Integer)
@@ -121,7 +118,7 @@ empty :: Ord a => Interval a
 empty = Empty
 {-# INLINE empty #-}
 
--- | negation handles NaN properly
+-- | Check if an interval is empty
 --
 -- >>> null (1 ... 5)
 -- False
@@ -144,22 +141,28 @@ singleton :: a -> Interval a
 singleton a = I a a
 {-# INLINE singleton #-}
 
--- | The infinumum (lower bound) of an interval
+-- | The infimum (lower bound) of an interval
 --
 -- >>> inf (1.0 ... 20.0)
 -- 1.0
-inf :: Fractional a => Interval a -> a
+--
+-- >>> inf empty
+-- *** Exception: empty interval
+inf :: Interval a -> a
 inf (I a _) = a
-inf Empty = nan
+inf Empty = Exception.throw EmptyInterval
 {-# INLINE inf #-}
 
 -- | The supremum (upper bound) of an interval
 --
 -- >>> sup (1.0 ... 20.0)
 -- 20.0
-sup :: Fractional a => Interval a -> a
+--
+-- >>> sup empty
+-- *** Exception: empty interval
+sup :: Interval a -> a
 sup (I _ b) = b
-sup Empty = nan
+sup Empty = Exception.throw EmptyInterval
 {-# INLINE sup #-}
 
 -- | Is the interval a singleton point?
@@ -219,8 +222,7 @@ width Empty = 0
 -- >>> magnitude empty
 -- *** Exception: empty interval
 magnitude :: (Num a, Ord a) => Interval a -> a
-magnitude (I a b) = on max abs a b
-magnitude Empty = Exception.throw EmptyInterval
+magnitude = sup . abs
 {-# INLINE magnitude #-}
 
 -- | \"mignitude\"
@@ -229,7 +231,7 @@ magnitude Empty = Exception.throw EmptyInterval
 -- 1
 --
 -- >>> mignitude (-20 ... 10)
--- 10
+-- 0
 --
 -- >>> mignitude (singleton 5)
 -- 5
@@ -239,8 +241,7 @@ magnitude Empty = Exception.throw EmptyInterval
 -- >>> mignitude empty
 -- *** Exception: empty interval
 mignitude :: (Num a, Ord a) => Interval a -> a
-mignitude (I a b) = on min abs a b
-mignitude Empty = Exception.throw EmptyInterval
+mignitude = inf . abs
 {-# INLINE mignitude #-}
 
 instance (Num a, Ord a) => Num (Interval a) where
@@ -346,7 +347,7 @@ notElem x xs = not (elem x xs)
 
 -- | 'realToFrac' will use the midpoint
 instance Real a => Real (Interval a) where
-  toRational Empty = nan
+  toRational Empty = Exception.throw EmptyInterval
   toRational (I ra rb) = a + (b - a) / 2 where
     a = toRational ra
     b = toRational rb
