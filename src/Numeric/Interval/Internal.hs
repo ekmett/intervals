@@ -46,6 +46,7 @@ module Numeric.Interval.Internal
   , ifloat
   ) where
 
+import Control.Exception as Exception
 import Data.Data
 import Data.Foldable hiding (minimum, maximum, elem, notElem)
 import Data.Function (on)
@@ -53,6 +54,7 @@ import Data.Monoid
 #if defined(__GLASGOW_HASKELL) && __GLASGOW_HASKELL__ >= 704
 import GHC.Generics
 #endif
+import Numeric.Interval.Exception
 import Prelude hiding (null, elem, notElem)
 
 -- $setup
@@ -212,11 +214,13 @@ width Empty = 0
 -- >>> magnitude (singleton 5)
 -- 5
 --
+-- throws 'EmptyInterval' if the interval is empty.
+--
 -- >>> magnitude empty
--- 0
+-- *** Exception: empty interval
 magnitude :: (Num a, Ord a) => Interval a -> a
 magnitude (I a b) = on max abs a b
-magnitude Empty = 0
+magnitude Empty = Exception.throw EmptyInterval
 {-# INLINE magnitude #-}
 
 -- | \"mignitude\"
@@ -230,11 +234,13 @@ magnitude Empty = 0
 -- >>> mignitude (singleton 5)
 -- 5
 --
+-- throws 'EmptyInterval' if the interval is empty.
+--
 -- >>> mignitude empty
--- 0
+-- *** Exception: empty interval
 mignitude :: (Num a, Ord a) => Interval a -> a
 mignitude (I a b) = on min abs a b
-mignitude Empty = 0
+mignitude Empty = Exception.throw EmptyInterval
 {-# INLINE mignitude #-}
 
 instance (Num a, Ord a) => Num (Interval a) where
@@ -294,10 +300,10 @@ bisectIntegral (I a b)
 -- 5.0
 --
 -- >>> midpoint empty
--- NaN
+-- *** Exception: empty interval
 midpoint :: Fractional a => Interval a -> a
 midpoint (I a b) = a + (b - a) / 2
-midpoint Empty = nan
+midpoint Empty = Exception.throw EmptyInterval
 {-# INLINE midpoint #-}
 
 -- | Determine if a point is in the interval.
@@ -354,7 +360,7 @@ instance Ord a => Ord (Interval a) where
     | bx < ay = LT
     | ax > by = GT
     | bx == ay && ax == by = EQ
-    | otherwise = error "Numeric.Interval.compare: ambiguous comparison"
+    | otherwise = Exception.throw AmbiguousComparison
   {-# INLINE compare #-}
 
   max (I a b) (I a' b') = max a a' ... max b b'
@@ -409,7 +415,7 @@ instance (Fractional a, Ord a) => Fractional (Interval a) where
   _ / Empty = Empty
   x / y@(I a b)
     | 0 `notElem` y = divNonZero x y
-    | iz && sz  = empty -- division by 0
+    | iz && sz  = Exception.throw DivideByZero
     | iz        = divPositive x a
     |       sz  = divNegative x b
     | otherwise = divZero x

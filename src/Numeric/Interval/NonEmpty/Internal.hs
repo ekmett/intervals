@@ -44,6 +44,7 @@ module Numeric.Interval.NonEmpty.Internal
   , ifloat
   ) where
 
+import Control.Exception as Exception
 import Data.Data
 import Data.Foldable hiding (minimum, maximum, elem, notElem)
 import Data.Function (on)
@@ -51,6 +52,7 @@ import Data.Monoid
 #if defined(__GLASGOW_HASKELL) && __GLASGOW_HASKELL__ >= 704
 import GHC.Generics
 #endif
+import Numeric.Interval.Exception
 import Prelude hiding (null, elem, notElem)
 
 -- $setup
@@ -285,7 +287,7 @@ instance Ord a => Ord (Interval a) where
     | bx < ay = LT
     | ax > by = GT
     | bx == ay && ax == by = EQ
-    | otherwise = error "Numeric.Interval.compare: ambiguous comparison"
+    | otherwise = Exception.throw AmbiguousComparison
   {-# INLINE compare #-}
 
   max (I a b) (I a' b') = max a a' ... max b b'
@@ -331,7 +333,7 @@ instance (Fractional a, Ord a) => Fractional (Interval a) where
   -- TODO: check isNegativeZero properly
   x / y@(I a b)
     | 0 `notElem` y = divNonZero x y
-    | iz && sz  = error "division by zero"
+    | iz && sz  = Exception.throw DivideByZero
     | iz        = divPositive x a
     |       sz  = divNegative x b
     | otherwise = divZero x

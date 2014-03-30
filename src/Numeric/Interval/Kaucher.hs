@@ -47,6 +47,7 @@ module Numeric.Interval.Kaucher
   ) where
 
 import Control.Applicative hiding (empty)
+import Control.Exception as Exception
 import Data.Data
 import Data.Distributive
 import Data.Foldable hiding (minimum, maximum, elem, notElem)
@@ -56,6 +57,7 @@ import Data.Traversable
 #if defined(__GLASGOW_HASKELL) && __GLASGOW_HASKELL__ >= 704
 import GHC.Generics
 #endif
+import Numeric.Interval.Exception
 import Prelude hiding (null, elem, notElem)
 
 -- $setup
@@ -341,7 +343,7 @@ notElem x xs = not (elem x xs)
 -- | 'realToFrac' will use the midpoint
 instance Real a => Real (Interval a) where
   toRational x
-    | null x   = nan
+    | null x    = Exception.throw EmptyInterval
     | otherwise = a + (b - a) / 2
     where
       a = toRational (inf x)
@@ -353,7 +355,7 @@ instance Ord a => Ord (Interval a) where
     | sup x < inf y = LT
     | inf x > sup y = GT
     | sup x == inf y && inf x == sup y = EQ
-    | otherwise = error "Numeric.Interval.compare: ambiguous comparison"
+    | otherwise = Exception.throw AmbiguousComparison
   {-# INLINE compare #-}
 
   max (I a b) (I a' b') = max a a' ... max b b'
