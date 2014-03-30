@@ -55,7 +55,7 @@ window.onload = function () {pageLoad();setSynopsis("mini_Numeric-Interval-NonEm
 </pre></div></div><div class="top"><p class="src"><a name="v:mignitude" class="def">mignitude</a> :: (Num a, Ord a) =&gt; <a href="Numeric-Interval-NonEmpty.html#t:Interval">Interval</a> a -&gt; a <a href="src/Numeric-Interval-NonEmpty-Internal.html#mignitude" class="link">Source</a></p><div class="doc"><p>&quot;mignitude&quot;</p><pre class="screen"><code class="prompt">&gt;&gt;&gt; </code><strong class="userinput"><code>mignitude (1 ... 20)
 </code></strong>1
 </pre><pre class="screen"><code class="prompt">&gt;&gt;&gt; </code><strong class="userinput"><code>mignitude (-20 ... 10)
-</code></strong>10
+</code></strong>0
 </pre><pre class="screen"><code class="prompt">&gt;&gt;&gt; </code><strong class="userinput"><code>mignitude (singleton 5)
 </code></strong>5
 </pre></div></div><div class="top"><p class="src"><a name="v:contains" class="def">contains</a> :: Ord a =&gt; <a href="Numeric-Interval-NonEmpty.html#t:Interval">Interval</a> a -&gt; <a href="Numeric-Interval-NonEmpty.html#t:Interval">Interval</a> a -&gt; Bool <a href="src/Numeric-Interval-NonEmpty-Internal.html#contains" class="link">Source</a></p><div class="doc"><p>Check if interval <code>X</code> totally contains interval <code>Y</code></p><pre class="screen"><code class="prompt">&gt;&gt;&gt; </code><strong class="userinput"><code>(20 ... 40 :: Interval Double) `contains` (25 ... 35 :: Interval Double)

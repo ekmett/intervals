@@ -188,7 +188,7 @@
 <a name="line-179"></a><span class='hs-comment'>-- &gt;&gt;&gt; magnitude (singleton 5)</span>
 <a name="line-180"></a><span class='hs-comment'>-- 5</span>
 <a name="line-181"></a><span class='hs-definition'>magnitude</span> <span class='hs-keyglyph'>::</span> <span class='hs-layout'>(</span><span class='hs-conid'>Num</span> <span class='hs-varid'>a</span><span class='hs-layout'>,</span> <span class='hs-conid'>Ord</span> <span class='hs-varid'>a</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-conid'>Interval</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>a</span>
-<a name="line-182"></a><span class='hs-definition'>magnitude</span> <span class='hs-layout'>(</span><span class='hs-conid'>I</span> <span class='hs-varid'>a</span> <span class='hs-varid'>b</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>on</span> <span class='hs-varid'>max</span> <span class='hs-varid'>abs</span> <span class='hs-varid'>a</span> <span class='hs-varid'>b</span>
+<a name="line-182"></a><span class='hs-definition'>magnitude</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>sup</span> <span class='hs-varop'>.</span> <span class='hs-varid'>abs</span>
 <a name="line-183"></a><span class='hs-comment'>{-# INLINE magnitude #-}</span>
 <a name="line-184"></a>
 <a name="line-185"></a><a name="mignitude"></a><span class='hs-comment'>-- | \"mignitude\"</span>
@@ -197,12 +197,12 @@
 <a name="line-188"></a><span class='hs-comment'>-- 1</span>
 <a name="line-189"></a><span class='hs-comment'>--</span>
 <a name="line-190"></a><span class='hs-comment'>-- &gt;&gt;&gt; mignitude (-20 ... 10)</span>
-<a name="line-191"></a><span class='hs-comment'>-- 10</span>
+<a name="line-191"></a><span class='hs-comment'>-- 0</span>
 <a name="line-192"></a><span class='hs-comment'>--</span>
 <a name="line-193"></a><span class='hs-comment'>-- &gt;&gt;&gt; mignitude (singleton 5)</span>
 <a name="line-194"></a><span class='hs-comment'>-- 5</span>
 <a name="line-195"></a><span class='hs-definition'>mignitude</span> <span class='hs-keyglyph'>::</span> <span class='hs-layout'>(</span><span class='hs-conid'>Num</span> <span class='hs-varid'>a</span><span class='hs-layout'>,</span> <span class='hs-conid'>Ord</span> <span class='hs-varid'>a</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-conid'>Interval</span> <span class='hs-varid'>a</span> <span class='hs-keyglyph'>-&gt;</span> <span class='hs-varid'>a</span>
-<a name="line-196"></a><span class='hs-definition'>mignitude</span> <span class='hs-layout'>(</span><span class='hs-conid'>I</span> <span class='hs-varid'>a</span> <span class='hs-varid'>b</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>on</span> <span class='hs-varid'>min</span> <span class='hs-varid'>abs</span> <span class='hs-varid'>a</span> <span class='hs-varid'>b</span>
+<a name="line-196"></a><span class='hs-definition'>mignitude</span> <span class='hs-keyglyph'>=</span> <span class='hs-varid'>inf</span> <span class='hs-varop'>.</span> <span class='hs-varid'>abs</span>
 <a name="line-197"></a><span class='hs-comment'>{-# INLINE mignitude #-}</span>
 <a name="line-198"></a>
 <a name="line-199"></a><a name="instance%20Num%20(Interval%20a)"></a><span class='hs-keyword'>instance</span> <span class='hs-layout'>(</span><span class='hs-conid'>Num</span> <span class='hs-varid'>a</span><span class='hs-layout'>,</span> <span class='hs-conid'>Ord</span> <span class='hs-varid'>a</span><span class='hs-layout'>)</span> <span class='hs-keyglyph'>=&gt;</span> <span class='hs-conid'>Num</span> <span class='hs-layout'>(</span><span class='hs-conid'>Interval</span> <span class='hs-varid'>a</span><span class='hs-layout'>)</span> <span class='hs-keyword'>where</span>
