@@ -30,6 +30,7 @@ module Numeric.Interval.NonEmpty
   , singular
   , width
   , midpoint
+  , distance
   , intersection
   , hull
   , bisect
