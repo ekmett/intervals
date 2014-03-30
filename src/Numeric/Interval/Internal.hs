@@ -256,7 +256,7 @@ mignitude = inf . abs
 -- >>> distance (1 ... 7) (-10 ... -2)
 -- 3
 --
--- >>> distance Empty (1 .. 1)
+-- >>> distance Empty (1 ... 1)
 -- *** Exception: empty interval
 distance :: (Num a, Ord a) => Interval a -> Interval a -> a
 distance i1 i2 = mignitude (i1 - i2)

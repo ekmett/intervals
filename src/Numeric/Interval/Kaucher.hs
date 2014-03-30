@@ -246,10 +246,13 @@ magnitude = sup . abs
 -- 1
 --
 -- >>> mignitude (-20 ... 10)
--- 10
+-- 0
 --
 -- >>> mignitude (singleton 5)
 -- 5
+--
+-- >>> mignitude empty
+-- NaN
 mignitude :: (Num a, Ord a) => Interval a -> a
 mignitude = inf . abs
 {-# INLINE mignitude #-}
@@ -265,8 +268,8 @@ mignitude = inf . abs
 -- >>> distance (1 ... 7) (-10 ... -2)
 -- 3
 --
--- >>> distance Empty (1 .. 1)
--- *** Exception: empty interval
+-- >>> distance empty (1 ... 1)
+-- NaN
 distance :: (Num a, Ord a) => Interval a -> Interval a -> a
 distance i1 i2 = mignitude (i1 - i2)
 
@@ -283,7 +286,8 @@ instance (Num a, Ord a) => Num (Interval a) where
   abs x@(I a b)
     | a >= 0    = x
     | b <= 0    = negate x
-    | otherwise = 0 ... max (- a) b
+    | b > 0 && a < 0 = 0 ... max (- a) b
+    | otherwise      = x -- preserve the empty interval
   {-# INLINE abs #-}
 
   signum = increasing signum
