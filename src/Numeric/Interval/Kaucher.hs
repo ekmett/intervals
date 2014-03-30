@@ -237,7 +237,7 @@ width (I a b) = b - a
 -- >>> magnitude (singleton 5)
 -- 5
 magnitude :: (Num a, Ord a) => Interval a -> a
-magnitude x = (max `on` abs) (inf x) (sup x)
+magnitude = sup . abs
 {-# INLINE magnitude #-}
 
 -- | \"mignitude\"
@@ -251,7 +251,7 @@ magnitude x = (max `on` abs) (inf x) (sup x)
 -- >>> mignitude (singleton 5)
 -- 5
 mignitude :: (Num a, Ord a) => Interval a -> a
-mignitude x = (min `on` abs) (inf x) (sup x)
+mignitude = inf . abs
 {-# INLINE mignitude #-}
 
 -- | Hausdorff distance between non-empty intervals.
