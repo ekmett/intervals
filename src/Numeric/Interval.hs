@@ -30,6 +30,7 @@ module Numeric.Interval
   , bisectIntegral
   , magnitude
   , mignitude
+  , distance
   , contains
   , isSubsetOf
   , certainly, (<!), (<=!), (==!), (>=!), (>!)

@@ -38,6 +38,7 @@ module Numeric.Interval.Internal
   , bisectIntegral
   , magnitude
   , mignitude
+  , distance
   , contains
   , isSubsetOf
   , certainly, (<!), (<=!), (==!), (>=!), (>!)
@@ -243,6 +244,22 @@ magnitude = sup . abs
 mignitude :: (Num a, Ord a) => Interval a -> a
 mignitude = inf . abs
 {-# INLINE mignitude #-}
+
+-- | Hausdorff distance between intervals.
+--
+-- >>> distance (1 ... 7) (6 ... 10)
+-- 0
+--
+-- >>> distance (1 ... 7) (15 ... 24)
+-- 8
+--
+-- >>> distance (1 ... 7) (-10 ... -2)
+-- 3
+--
+-- >>> distance Empty (1 .. 1)
+-- *** Exception: empty interval
+distance :: (Num a, Ord a) => Interval a -> Interval a -> a
+distance i1 i2 = mignitude (i1 - i2)
 
 instance (Num a, Ord a) => Num (Interval a) where
   I a b + I a' b' = (a + a') ... (b + b')
