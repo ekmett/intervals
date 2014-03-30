@@ -1,3 +1,8 @@
+0.7
+---
+* Corrected the definition of `mignitude`.
+* Added a notion of `distance` between intervals
+
 0.6
 ---
 * Added `Numeric.Interval.Exception`. For consistency, we tend to throw exceptions now instead of rely on `NaN` when working with empty intervals.
