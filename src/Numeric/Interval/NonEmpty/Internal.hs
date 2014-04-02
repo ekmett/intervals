@@ -660,10 +660,10 @@ clamp (I a b) x
 -- | Inflate an interval by enlarging it at both ends.
 --
 -- >>> inflate 3 (-1 ... 7)
--- (-4 ... 10)
+-- -4 ... 10
 --
 -- >>> inflate (-2) (0 ... 4)
--- (-2 ... 6)
+-- -2 ... 6
 inflate :: (Num a, Ord a) => a -> Interval a -> Interval a
 inflate x = (+ (symmetric x))
 
@@ -671,10 +671,10 @@ inflate x = (+ (symmetric x))
 -- Note that in cases that would result in an empty interval, the result is a singleton interval at the midpoint.
 --
 -- >>> deflate 3 (-4 ... 10)
--- (-1 ... 7)
+-- -1 ... 7
 --
 -- >>> deflate 2 (-1 ... 1)
--- (0 ... 0)
+-- 0 ... 0
 deflate :: (Fractional a, Ord a) => a -> Interval a -> Interval a
 deflate x i@(I a b) | a' <= b'  = I a' b'
                     | otherwise = singleton m
@@ -686,10 +686,10 @@ deflate x i@(I a b) | a' <= b'  = I a' b'
 -- | Scale an interval about its midpoint.
 --
 -- >>> scale 1.1 (-6 ... 4)
--- (-6.5 ... 4.5)
+-- -6.5 ... 4.5
 --
 -- >>> scale (-2) (-1 ... 1)
--- (-2 ... 2)
+-- -2 ... 2
 scale :: (Fractional a, Ord a) => a -> Interval a -> Interval a
 scale x i = let
                h = x * (width i) / 2
@@ -702,10 +702,10 @@ scale x i = let
 -- | Construct a symmetric interval.
 --
 -- >>> symmetric 3
--- (-3 ... 3)
+-- -3 ... 3
 --
 -- >>> symmetric -2
--- (-2 ... 2)
+-- -2 ... 2
 symmetric :: (Num a, Ord a) => a -> Interval a
 symmetric x = (negate x) ... x
 
