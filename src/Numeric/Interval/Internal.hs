@@ -20,6 +20,7 @@
 module Numeric.Interval.Internal
   ( Interval(..)
   , (...)
+  , (+/-)
   , interval
   , whole
   , empty
@@ -79,6 +80,10 @@ instance Foldable Interval where
   {-# INLINE foldMap #-}
 
 infix 3 ...
+infixl 6 +/-
+
+(+/-) :: (Num a, Ord a) => a -> a -> Interval a
+a +/- b = a - b ... a + b
 
 negInfinity :: Fractional a => a
 negInfinity = (-1)/0
