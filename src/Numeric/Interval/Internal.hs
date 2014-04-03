@@ -271,7 +271,7 @@ distance i1 i2 = mignitude (i1 - i2)
 -- >>> inflate (-2) (0 ... 4)
 -- -2 ... 6
 --
--- >>> inflate empty
+-- >>> inflate (empty :: Interval Int)
 -- Empty
 inflate :: (Num a, Ord a) => a -> Interval a -> Interval a
 inflate x = (+ symmetric x)
@@ -284,7 +284,7 @@ inflate x = (+ symmetric x)
 -- >>> deflate 2.0 (-1.0 ... 1.0)
 -- Empty
 --
--- >>> deflate (empty :: Interval Int)
+-- >>> deflate (empty :: Interval Double)
 -- Empty
 deflate :: (Fractional a, Ord a) => a -> Interval a -> Interval a
 deflate _ Empty               = Empty
