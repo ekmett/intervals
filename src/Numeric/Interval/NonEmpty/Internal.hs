@@ -665,7 +665,7 @@ clamp (I a b) x
 -- >>> inflate (-2) (0 ... 4)
 -- -2 ... 6
 inflate :: (Num a, Ord a) => a -> Interval a -> Interval a
-inflate x = (+ (symmetric x))
+inflate x = (+ symmetric x)
 
 -- | Deflate an interval by shrinking it from both ends.
 -- Note that in cases that would result in an empty interval, the result is a singleton interval at the midpoint.
@@ -707,7 +707,7 @@ scale x i = let
 -- >>> symmetric (-2)
 -- -2 ... 2
 symmetric :: (Num a, Ord a) => a -> Interval a
-symmetric x = (negate x) ... x
+symmetric x = negate x ... x
 
 -- | id function. Useful for type specification
 --
