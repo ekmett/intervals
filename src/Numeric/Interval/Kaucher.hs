@@ -38,6 +38,8 @@ module Numeric.Interval.Kaucher
   , magnitude
   , mignitude
   , distance
+  , inflate, deflate
+  , scale, symmetric
   , contains
   , isSubsetOf
   , certainly, (<!), (<=!), (==!), (>=!), (>!)
@@ -272,6 +274,55 @@ mignitude = inf . abs
 -- NaN
 distance :: (Num a, Ord a) => Interval a -> Interval a -> a
 distance i1 i2 = mignitude (i1 - i2)
+
+-- | Inflate an interval by enlarging it at both ends.
+--
+-- >>> inflate 3 (-1 ... 7)
+-- -4 ... 10
+--
+-- >>> inflate (-2) (0 ... 4)
+-- -2 ... 6
+inflate :: (Num a, Ord a) => a -> Interval a -> Interval a
+inflate x = (+ symmetric x)
+
+-- | Deflate an interval by shrinking it from both ends.
+--
+-- >>> deflate 3.0 (-4.0 ... 10.0)
+-- -1.0 ... 7.0
+--
+-- >>> deflate 2.0 (-1.0 ... 1.0)
+-- 1.0 ... -1.0
+deflate :: (Fractional a, Ord a) => a -> Interval a -> Interval a
+deflate x (I a b) = I a' b'
+  where
+    a' = a + x
+    b' = b - x
+
+-- | Scale an interval about its midpoint.
+--
+-- >>> scale 1.1 (-6.0 ... 4.0)
+-- -6.5 ... 4.5
+--
+-- >>> scale (-2.0) (-1.0 ... 1.0)
+-- 2.0 ... -2.0
+scale :: (Fractional a, Ord a) => a -> Interval a -> Interval a
+scale x i = let
+               h = x * (width i) / 2
+               mid = midpoint i
+               a' = mid - h
+               b' = mid + h
+             in
+               I a' b'
+
+-- | Construct a symmetric interval.
+--
+-- >>> symmetric 3
+-- -3 ... 3
+--
+-- >>> symmetric (-2)
+-- 2 ... -2
+symmetric :: (Num a, Ord a) => a -> Interval a
+symmetric x = negate x ... x
 
 instance (Num a, Ord a) => Num (Interval a) where
   I a b + I a' b' = (a + a') ... (b + b')

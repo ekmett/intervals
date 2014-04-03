@@ -277,7 +277,6 @@ inflate :: (Num a, Ord a) => a -> Interval a -> Interval a
 inflate x = (+ symmetric x)
 
 -- | Deflate an interval by shrinking it from both ends.
--- Note that in cases that would result in an empty interval, the result is a singleton interval at the midpoint.
 --
 -- >>> deflate 3.0 (-4.0 ... 10.0)
 -- -1.0 ... 7.0
