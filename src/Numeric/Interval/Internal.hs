@@ -284,7 +284,7 @@ inflate x = (+ symmetric x)
 -- >>> deflate 2.0 (-1.0 ... 1.0)
 -- Empty
 --
--- >>> deflate empty
+-- >>> deflate (empty :: Interval Int)
 -- Empty
 deflate :: (Fractional a, Ord a) => a -> Interval a -> Interval a
 deflate _ Empty               = Empty
@@ -300,7 +300,7 @@ deflate x (I a b) | a' <= b'  = I a' b'
 -- -6.5 ... 4.5
 --
 -- >>> scale (-2.0) (-1.0 ... 1.0)
--- -2.0 ... 2.0
+-- Empty
 --
 -- >>> scale 3.0 empty
 -- Empty
@@ -322,7 +322,11 @@ scale x i     = let
 -- >>> symmetric (-2)
 -- -2 ... 2
 symmetric :: (Num a, Ord a) => a -> Interval a
-symmetric x = negate x ... x
+symmetric x | a <= b    = I a b
+            | otherwise = I b a
+  where
+    a = negate x
+    b = x
 
 instance (Num a, Ord a) => Num (Interval a) where
   I a b + I a' b' = (a + a') ... (b + b')
