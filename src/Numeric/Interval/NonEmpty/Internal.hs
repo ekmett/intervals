@@ -665,7 +665,7 @@ clamp (I a b) x
 -- >>> inflate (-2) (0 ... 4)
 -- -2 ... 6
 inflate :: (Num a, Ord a) => a -> Interval a -> Interval a
-inflate x = (+ symmetric x)
+inflate x y = symmetric x + y
 
 -- | Deflate an interval by shrinking it from both ends.
 -- Note that in cases that would result in an empty interval, the result is a singleton interval at the midpoint.
@@ -691,13 +691,11 @@ deflate x i@(I a b) | a' <= b'  = I a' b'
 -- >>> scale (-2.0) (-1.0 ... 1.0)
 -- -2.0 ... 2.0
 scale :: (Fractional a, Ord a) => a -> Interval a -> Interval a
-scale x i = let
-               h = x * (width i) / 2
-               mid = midpoint i
-               a' = mid - h
-               b' = mid + h
-             in
-               a' ... b'
+scale x i = a ... b where
+  h = x * width i / 2
+  mid = midpoint i
+  a = mid - h
+  b = mid + h
 
 -- | Construct a symmetric interval.
 --

@@ -274,7 +274,7 @@ distance i1 i2 = mignitude (i1 - i2)
 -- >>> inflate 1 empty
 -- Empty
 inflate :: (Num a, Ord a) => a -> Interval a -> Interval a
-inflate x = (+ symmetric x)
+inflate x y = symmetric x + y
 
 -- | Deflate an interval by shrinking it from both ends.
 --
@@ -306,13 +306,11 @@ deflate x (I a b) | a' <= b'  = I a' b'
 -- Empty
 scale :: (Fractional a, Ord a) => a -> Interval a -> Interval a
 scale _ Empty = Empty
-scale x i     = let
-                   h = x * (width i) / 2
-                   mid = midpoint i
-                   a' = mid - h
-                   b' = mid + h
-                 in
-                   a' ... b'
+scale x i = a ... b where
+  h = x * width i / 2
+  mid = midpoint i
+  a = mid - h
+  b = mid + h
 
 -- | Construct a symmetric interval.
 --
