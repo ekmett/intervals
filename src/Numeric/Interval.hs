@@ -31,6 +31,8 @@ module Numeric.Interval
   , magnitude
   , mignitude
   , distance
+  , inflate, deflate
+  , scale, symmetric
   , contains
   , isSubsetOf
   , certainly, (<!), (<=!), (==!), (>=!), (>!)

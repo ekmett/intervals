@@ -41,6 +41,8 @@ module Numeric.Interval.NonEmpty.Internal
   , certainly, (<!), (<=!), (==!), (>=!), (>!)
   , possibly, (<?), (<=?), (==?), (>=?), (>?)
   , clamp
+  , inflate, deflate
+  , scale, symmetric
   , idouble
   , ifloat
   ) where
@@ -654,6 +656,58 @@ clamp (I a b) x
   | x < a     = a
   | x > b     = b
   | otherwise = x
+
+-- | Inflate an interval by enlarging it at both ends.
+--
+-- >>> inflate 3 (-1 ... 7)
+-- -4 ... 10
+--
+-- >>> inflate (-2) (0 ... 4)
+-- -2 ... 6
+inflate :: (Num a, Ord a) => a -> Interval a -> Interval a
+inflate x = (+ symmetric x)
+
+-- | Deflate an interval by shrinking it from both ends.
+-- Note that in cases that would result in an empty interval, the result is a singleton interval at the midpoint.
+--
+-- >>> deflate 3.0 (-4.0 ... 10.0)
+-- -1.0 ... 7.0
+--
+-- >>> deflate 2.0 (-1.0 ... 1.0)
+-- 0.0 ... 0.0
+deflate :: (Fractional a, Ord a) => a -> Interval a -> Interval a
+deflate x i@(I a b) | a' <= b'  = I a' b'
+                    | otherwise = singleton m
+  where
+    a' = a + x
+    b' = b - x
+    m = midpoint i
+
+-- | Scale an interval about its midpoint.
+--
+-- >>> scale 1.1 (-6.0 ... 4.0)
+-- -6.5 ... 4.5
+--
+-- >>> scale (-2.0) (-1.0 ... 1.0)
+-- -2.0 ... 2.0
+scale :: (Fractional a, Ord a) => a -> Interval a -> Interval a
+scale x i = let
+               h = x * (width i) / 2
+               mid = midpoint i
+               a' = mid - h
+               b' = mid + h
+             in
+               a' ... b'
+
+-- | Construct a symmetric interval.
+--
+-- >>> symmetric 3
+-- -3 ... 3
+--
+-- >>> symmetric (-2)
+-- -2 ... 2
+symmetric :: (Num a, Ord a) => a -> Interval a
+symmetric x = negate x ... x
 
 -- | id function. Useful for type specification
 --
