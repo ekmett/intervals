@@ -281,7 +281,7 @@ distance i1 i2 = mignitude (i1 - i2)
 -- -4 ... 10
 --
 -- >>> inflate (-2) (0 ... 4)
--- -2 ... 6
+-- 2 ... 2
 inflate :: (Num a, Ord a) => a -> Interval a -> Interval a
 inflate x = (+ symmetric x)
 
