@@ -397,7 +397,7 @@ instance (RealFloat a, Ord a) => Floating (Interval a) where
   {-# INLINE log #-}
   sin = periodic (2 * pi) (symmetric 1) (signum' . cos)          sin
   cos = periodic (2 * pi) (symmetric 1) (signum' . negate . sin) cos
-  tan = periodic (2 * pi) whole         (const GT              ) tan -- derivative only has to have correct sign
+  tan = periodic (2 * pi) whole         (const GT)               tan -- derivative only has to have correct sign
   asin (I a b) = I (if a <= -1 then -halfPi else asin a) (if b >= 1 then halfPi else asin b)
     where halfPi = pi / 2
   {-# INLINE asin #-}
