@@ -85,10 +85,23 @@ posInfinity :: Fractional a => a
 posInfinity = 1/0
 {-# INLINE posInfinity #-}
 
-fmod :: RealFrac a => a -> a -> a
-fmod a b = a - q*b where
-  q = realToFrac (truncate $ a / b :: Integer)
-{-# INLINE fmod #-}
+signum' :: (Ord a, Num a) => a -> Ordering
+signum' x = compare x 0
+
+-- arguments are period, range, derivative, function, and interval
+periodic :: (Num a, Ord a) => a -> Interval a -> (a -> Ordering) -> (a -> a) -> Interval a -> Interval a
+periodic p r _ _ x | width x > p = r
+periodic _ r d f (I a b) = periodic' r (d a) (d b) (f a) (f b)
+
+-- arguments are global range, derivatives at endpoints, values at endpoints
+periodic' :: (Ord a) => Interval a -> Ordering -> Ordering -> a -> a -> Interval a
+periodic' r GT GT a b | a <= b = I a b -- stays in increasing zone
+                      | otherwise = r
+periodic' r LT LT a b | a >= b = I b a -- stays in decreasing zone
+                      | otherwise = r
+periodic' r GT _  a b = I (min a b) (sup r) -- was going up, started going down
+periodic' r LT _  a b = I (inf r) (max a b) -- was going down, started going up
+periodic' _ _  _  a b = a ... b -- includes at least one max/min point
 
 -- | Create a non-empty interval, turning it around if necessary
 (...) :: Ord a => a -> a -> Interval a
@@ -382,25 +395,9 @@ instance (RealFloat a, Ord a) => Floating (Interval a) where
   {-# INLINE exp #-}
   log (I a b) = (if a > 0 then log a else negInfinity) ... log b
   {-# INLINE log #-}
-  cos x
-    | width t >= pi = (-1) ... 1
-    | inf t >= pi = - cos (t - pi)
-    | sup t <= pi = decreasing cos t
-    | sup t <= 2 * pi = (-1) ... cos ((pi * 2 - sup t) `min` inf t)
-    | otherwise = (-1) ... 1
-    where
-      t = fmod x (pi * 2)
-  {-# INLINE cos #-}
-  sin x = cos (x - pi / 2)
-  {-# INLINE sin #-}
-  tan x
-    | inf t' <= - pi / 2 || sup t' >= pi / 2 = whole
-    | otherwise = increasing tan x
-    where
-      t = x `fmod` pi
-      t' | t >= pi / 2 = t - pi
-         | otherwise    = t
-  {-# INLINE tan #-}
+  sin = periodic (2 * pi) (symmetric 1) (signum' . cos)          sin
+  cos = periodic (2 * pi) (symmetric 1) (signum' . negate . sin) cos
+  tan = periodic (2 * pi) whole         (const GT              ) tan -- derivative only has to have correct sign
   asin (I a b) = I (if a <= -1 then -halfPi else asin a) (if b >= 1 then halfPi else asin b)
     where halfPi = pi / 2
   {-# INLINE asin #-}
