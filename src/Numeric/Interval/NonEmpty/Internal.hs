@@ -356,8 +356,6 @@ instance (Fractional a, Ord a) => Fractional (Interval a) where
     where
       iz = a == 0
       sz = b == 0
-  recip (I a b)   = on min recip a b ... on max recip a b
-  {-# INLINE recip #-}
   fromRational r  = let r' = fromRational r in I r' r'
   {-# INLINE fromRational #-}
 
