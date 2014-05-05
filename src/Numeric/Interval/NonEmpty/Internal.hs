@@ -397,11 +397,19 @@ instance (RealFloat a, Ord a) => Floating (Interval a) where
   {-# INLINE log #-}
   sin = periodic (2 * pi) (symmetric 1) (signum' . cos)          sin
   cos = periodic (2 * pi) (symmetric 1) (signum' . negate . sin) cos
-  tan = periodic (2 * pi) whole         (const GT)               tan -- derivative only has to have correct sign
-  asin (I a b) = I (if a <= -1 then -halfPi else asin a) (if b >= 1 then halfPi else asin b)
-    where halfPi = pi / 2
+  tan = periodic pi       whole         (const GT)               tan -- derivative only has to have correct sign
+  asin (I a b) = (asin' a) ... (asin' b)
+    where 
+      asin' x | x >= 1 = halfPi
+              | x <= -1 = -halfPi
+              | otherwise = asin x
+      halfPi = pi / 2
   {-# INLINE asin #-}
-  acos (I a b) = I (if b >= 1 then 0 else acos b) (if a < -1 then pi else acos a)
+  acos (I a b) = (acos' a) ... (acos' b)
+    where
+      acos' x | x >= 1 = 0
+              | x <= -1 = pi
+              | otherwise = acos x
   {-# INLINE acos #-}
   atan = increasing atan
   {-# INLINE atan #-}
@@ -418,11 +426,16 @@ instance (RealFloat a, Ord a) => Floating (Interval a) where
   {-# INLINE tanh #-}
   asinh = increasing asinh
   {-# INLINE asinh #-}
-  acosh (I a b) = I lo $ acosh b
-    where lo | a <= 1 = 0
-             | otherwise = acosh a
+  acosh (I a b) = (acosh' a) ... (acosh' b)
+    where
+      acosh' x | x <= 1 = 0
+               | otherwise = acosh x
   {-# INLINE acosh #-}
-  atanh (I a b) = I (if a <= - 1 then negInfinity else atanh a) (if b >= 1 then posInfinity else atanh b)
+  atanh (I a b) = (atanh' a) ... (atanh' b)
+    where
+      atanh' x | x <= -1 = negInfinity
+               | x >= 1 = posInfinity
+               | otherwise = atanh x
   {-# INLINE atanh #-}
 
 -- | lift a monotone increasing function over a given interval
