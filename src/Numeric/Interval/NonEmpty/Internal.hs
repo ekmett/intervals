@@ -85,10 +85,13 @@ posInfinity :: Fractional a => a
 posInfinity = 1/0
 {-# INLINE posInfinity #-}
 
+-- the sign of a number, but as an Ordering so that we can pattern match over it.
+-- GT means greater than zero, etc.
 signum' :: (Ord a, Num a) => a -> Ordering
 signum' x = compare x 0
 
 -- arguments are period, range, derivative, function, and interval
+-- we require that each period of the function include precisely one local minimum and one local maximum
 periodic :: (Num a, Ord a) => a -> Interval a -> (a -> Ordering) -> (a -> a) -> Interval a -> Interval a
 periodic p r _ _ x | width x > p = r
 periodic _ r d f (I a b) = periodic' r (d a) (d b) (f a) (f b)
@@ -96,12 +99,12 @@ periodic _ r d f (I a b) = periodic' r (d a) (d b) (f a) (f b)
 -- arguments are global range, derivatives at endpoints, values at endpoints
 periodic' :: (Ord a) => Interval a -> Ordering -> Ordering -> a -> a -> Interval a
 periodic' r GT GT a b | a <= b = I a b -- stays in increasing zone
-                      | otherwise = r
+                      | otherwise = r  -- goes from increasing zone, all the way through decreasing zone, and back to increasing zone
 periodic' r LT LT a b | a >= b = I b a -- stays in decreasing zone
-                      | otherwise = r
+                      | otherwise = r  -- goes from decreasing zone, all the way through increasing zone, and back to decreasing zone
 periodic' r GT _  a b = I (min a b) (sup r) -- was going up, started going down
 periodic' r LT _  a b = I (inf r) (max a b) -- was going down, started going up
-periodic' _ _  _  a b = a ... b -- includes at least one max/min point
+periodic' _ _  _  a b = a ... b -- precisely begins or ends at at least one local extreme
 
 -- | Create a non-empty interval, turning it around if necessary
 (...) :: Ord a => a -> a -> Interval a
