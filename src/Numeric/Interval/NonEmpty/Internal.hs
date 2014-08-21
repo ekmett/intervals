@@ -104,10 +104,10 @@ periodic' r LT LT a b | a >= b = I b a -- stays in decreasing zone
                       | otherwise = r  -- goes from decreasing zone, all the way through increasing zone, and back to decreasing zone
 periodic' r GT _  a b = I (min a b) (sup r) -- was going up, started going down
 periodic' r LT _  a b = I (inf r) (max a b) -- was going down, started going up
-periodic' r EQ GT a b | a < b = I a b -- entirely within increasing zone
-                      | otherwise = r
-periodic' r EQ LT a b | a > b = I b a -- entirely within decreasing zone
-                      | otherwise = r
+periodic' r EQ GT a b | a < b = I a b -- stays in increasing zone
+                      | otherwise = r -- goes from increasing zone, all the way through decreasing zone, and back to increasing zone
+periodic' r EQ LT a b | a > b = I b a -- stays in decreasing zone
+                      | otherwise = r -- goes from decreasing zone, all the way through increasing zone, and back to decreasing zone
 periodic' _ _  _  a b = a ... b -- precisely begins and ends at local extremes, so it's either a singleton or whole
 
 -- | Create a non-empty interval, turning it around if necessary
