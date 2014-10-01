@@ -1,3 +1,7 @@
+0.7.0.1
+-------
+* Removed a couple of unnecessary `Fractional` constraints.
+
 0.7
 ---
 * Corrected the definition of `mignitude`.
