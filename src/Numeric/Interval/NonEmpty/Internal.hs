@@ -473,7 +473,7 @@ instance RealFloat a => RealFloat (Interval a) where
 --
 -- >>> intersection (1 ... 10 :: Interval Double) (5 ... 15 :: Interval Double)
 -- Just (5.0 ... 10.0)
-intersection :: (Fractional a, Ord a) => Interval a -> Interval a -> Maybe (Interval a)
+intersection :: Ord a => Interval a -> Interval a -> Maybe (Interval a)
 intersection x@(I a b) y@(I a' b')
   | x /=! y   = Nothing
   | otherwise = Just $ I (max a a') (min b b')
