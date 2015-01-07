@@ -52,7 +52,11 @@ module Numeric.Interval.Internal
 
 import Control.Exception as Exception
 import Data.Data
+#if MIN_VERSION_base(4,8,0)
+import Data.Foldable hiding (minimum, maximum, elem, notElem, null)
+#else
 import Data.Foldable hiding (minimum, maximum, elem, notElem)
+#endif
 import Data.Function (on)
 import Data.Monoid
 #if defined(__GLASGOW_HASKELL) && __GLASGOW_HASKELL__ >= 704
