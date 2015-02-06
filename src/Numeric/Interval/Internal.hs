@@ -1,7 +1,7 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE DeriveDataTypeable #-}
-#if defined(__GLASGOW_HASKELL) && __GLASGOW_HASKELL__ >= 704
+#if __GLASGOW_HASKELL__ >= 704
 {-# LANGUAGE DeriveGeneric #-}
 #endif
 {-# OPTIONS_HADDOCK not-home #-}
@@ -52,10 +52,14 @@ module Numeric.Interval.Internal
 
 import Control.Exception as Exception
 import Data.Data
-import Data.Foldable hiding (minimum, maximum, elem, notElem, null)
+import Data.Foldable hiding (minimum, maximum, elem, notElem
+#if __GLASGOW_HASKELL__ >= 710
+  , null
+#endif
+  )
 import Data.Function (on)
 import Data.Monoid
-#if defined(__GLASGOW_HASKELL) && __GLASGOW_HASKELL__ >= 704
+#if __GLASGOW_HASKELL__ >= 704
 import GHC.Generics
 #endif
 import Numeric.Interval.Exception
@@ -66,7 +70,7 @@ import Prelude hiding (null, elem, notElem)
 data Interval a = I !a !a | Empty deriving
   ( Data
   , Typeable
-#if defined(__GLASGOW_HASKELL) && __GLASGOW_HASKELL__ >= 704
+#if __GLASGOW_HASKELL__ >= 704
   , Generic
 #if __GLASGOW_HASKELL__ >= 706
   , Generic1

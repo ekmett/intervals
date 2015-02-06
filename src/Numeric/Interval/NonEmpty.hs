@@ -1,7 +1,7 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE DeriveDataTypeable #-}
-#if defined(__GLASGOW_HASKELL) && __GLASGOW_HASKELL__ >= 704
+#if __GLASGOW_HASKELL__ >= 704
 {-# LANGUAGE DeriveGeneric #-}
 #endif
 -----------------------------------------------------------------------------
