@@ -53,7 +53,7 @@ import Control.Applicative hiding (empty)
 import Control.Exception as Exception
 import Data.Data
 import Data.Distributive
-import Data.Foldable hiding (minimum, maximum, elem, notElem)
+import Data.Foldable hiding (minimum, maximum, elem, notElem, null)
 import Data.Function (on)
 import Data.Monoid
 import Data.Traversable
