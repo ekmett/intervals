@@ -1,3 +1,8 @@
+0.7.1
+-----
+* Now compatible with GHC 7.10.1-rc1
+* Fixed a number of broken `#if` pragmas, fixing previously missing instances.
+
 0.7.0.1
 -------
 * Removed a couple of unnecessary `Fractional` constraints.
