@@ -99,10 +99,30 @@ posInfinity :: Fractional a => a
 posInfinity = 1/0
 {-# INLINE posInfinity #-}
 
-fmod :: RealFrac a => a -> a -> a
-fmod a b = a - q*b where
-  q = realToFrac (truncate $ a / b :: Integer)
-{-# INLINE fmod #-}
+-- the sign of a number, but as an Ordering so that we can pattern match over it.
+-- GT means greater than zero, etc.
+signum' :: (Ord a, Num a) => a -> Ordering
+signum' x = compare x 0
+
+-- arguments are period, range, derivative, function, and interval
+-- we require that each period of the function include precisely one local minimum and one local maximum
+periodic :: (Num a, Ord a) => a -> Interval a -> (a -> Ordering) -> (a -> a) -> Interval a -> Interval a
+periodic p r _ _ x | width x > p = r
+periodic _ r d f (I a b) = periodic' r (d a) (d b) (f a) (f b)
+
+-- arguments are global range, derivatives at endpoints, values at endpoints
+periodic' :: (Ord a) => Interval a -> Ordering -> Ordering -> a -> a -> Interval a
+periodic' r GT GT a b | a <= b = I a b -- stays in increasing zone
+                      | otherwise = r  -- goes from increasing zone, all the way through decreasing zone, and back to increasing zone
+periodic' r LT LT a b | a >= b = I b a -- stays in decreasing zone
+                      | otherwise = r  -- goes from decreasing zone, all the way through increasing zone, and back to decreasing zone
+periodic' r GT _  a b = I (min a b) (sup r) -- was going up, started going down
+periodic' r LT _  a b = I (inf r) (max a b) -- was going down, started going up
+periodic' r EQ GT a b | a < b = I a b -- stays in increasing zone
+                      | otherwise = r -- goes from increasing zone, all the way through decreasing zone, and back to increasing zone
+periodic' r EQ LT a b | a > b = I b a -- stays in decreasing zone
+                      | otherwise = r -- goes from decreasing zone, all the way through increasing zone, and back to decreasing zone
+periodic' _ _  _  a b = a ... b -- precisely begins and ends at local extremes, so it's either a singleton or whole
 
 -- | Create a non-empty interval, turning it around if necessary
 (...) :: Ord a => a -> a -> Interval a
@@ -407,8 +427,6 @@ instance (Fractional a, Ord a) => Fractional (Interval a) where
     where
       iz = a == 0
       sz = b == 0
-  recip (I a b)   = on min recip a b ... on max recip a b
-  {-# INLINE recip #-}
   fromRational r  = let r' = fromRational r in I r' r'
   {-# INLINE fromRational #-}
 
@@ -450,31 +468,23 @@ instance (RealFloat a, Ord a) => Floating (Interval a) where
   {-# INLINE pi #-}
   exp = increasing exp
   {-# INLINE exp #-}
-  log (I a b) = (if a > 0 then log a else negInfinity) ... log b
+  log (I a b) = (if a > 0 then log a else negInfinity) ... (if b > 0 then log b else negInfinity)
   {-# INLINE log #-}
-  cos x
-    | width t >= pi = (-1) ... 1
-    | inf t >= pi = - cos (t - pi)
-    | sup t <= pi = decreasing cos t
-    | sup t <= 2 * pi = (-1) ... cos ((pi * 2 - sup t) `min` inf t)
-    | otherwise = (-1) ... 1
-    where
-      t = fmod x (pi * 2)
-  {-# INLINE cos #-}
-  sin x = cos (x - pi / 2)
-  {-# INLINE sin #-}
-  tan x
-    | inf t' <= - pi / 2 || sup t' >= pi / 2 = whole
-    | otherwise = increasing tan x
-    where
-      t = x `fmod` pi
-      t' | t >= pi / 2 = t - pi
-         | otherwise    = t
-  {-# INLINE tan #-}
-  asin (I a b) = I (if a <= -1 then -halfPi else asin a) (if b >= 1 then halfPi else asin b)
-    where halfPi = pi / 2
+  sin = periodic (2 * pi) (symmetric 1) (signum' . cos)          sin
+  cos = periodic (2 * pi) (symmetric 1) (signum' . negate . sin) cos
+  tan = periodic pi       whole         (const GT)               tan -- derivative only has to have correct sign
+  asin (I a b) = (asin' a) ... (asin' b)
+    where 
+      asin' x | x >= 1 = halfPi
+              | x <= -1 = -halfPi
+              | otherwise = asin x
+      halfPi = pi / 2
   {-# INLINE asin #-}
-  acos (I a b) = I (if b >= 1 then 0 else acos b) (if a < -1 then pi else acos a)
+  acos (I a b) = (acos' a) ... (acos' b)
+    where
+      acos' x | x >= 1 = 0
+              | x <= -1 = pi
+              | otherwise = acos x
   {-# INLINE acos #-}
   atan = increasing atan
   {-# INLINE atan #-}
@@ -491,11 +501,16 @@ instance (RealFloat a, Ord a) => Floating (Interval a) where
   {-# INLINE tanh #-}
   asinh = increasing asinh
   {-# INLINE asinh #-}
-  acosh (I a b) = I lo $ acosh b
-    where lo | a <= 1 = 0
-             | otherwise = acosh a
+  acosh (I a b) = (acosh' a) ... (acosh' b)
+    where
+      acosh' x | x <= 1 = 0
+               | otherwise = acosh x
   {-# INLINE acosh #-}
-  atanh (I a b) = I (if a <= - 1 then negInfinity else atanh a) (if b >= 1 then posInfinity else atanh b)
+  atanh (I a b) = (atanh' a) ... (atanh' b)
+    where
+      atanh' x | x <= -1 = negInfinity
+               | x >= 1 = posInfinity
+               | otherwise = atanh x
   {-# INLINE atanh #-}
 
 -- | lift a monotone increasing function over a given interval
