@@ -59,6 +59,20 @@ import Numeric.Interval.Exception
 import Prelude hiding (null, elem, notElem)
 
 -- $setup
+-- >>> import Test.QuickCheck.Arbitrary
+-- >>> import Test.QuickCheck.Gen
+-- >>> import Test.QuickCheck.Property
+-- >>> import Control.Applicative
+-- >>> :set -XNoMonomorphismRestriction
+-- >>> :set -XExtendedDefaultRules
+-- >>> default (Integer,Double)
+-- >>> instance (Ord a, Arbitrary a) => Arbitrary (Interval a) where arbitrary = (...) <$> arbitrary <*> arbitrary
+-- >>> let elementOf xs = sized $ \n -> case n of { 0 -> pure $ inf xs; 1 -> pure $ sup xs; _ -> choose (inf xs, sup xs); }
+-- >>> let conservative sf f xs = forAll (choose (inf xs, sup xs)) $ \x -> (sf x) `elem` (f xs)
+-- >>> let conservative2 sf f xs ys = forAll ((,) <$> choose (inf xs, sup xs) <*> choose (inf ys, sup ys)) $ \(x,y) -> (sf x y) `elem` (f xs ys)
+-- >>> let conservativeExceptNaN sf f xs = forAll (choose (inf xs, sup xs)) $ \x -> isNaN (sf x) || (sf x) `elem` (f xs)
+-- >>> let compose2 = fmap . fmap
+-- >>> let commutative op a b = (a `op` b) == (b `op` a)
 
 data Interval a = I !a !a deriving
   ( Data
@@ -85,10 +99,30 @@ posInfinity :: Fractional a => a
 posInfinity = 1/0
 {-# INLINE posInfinity #-}
 
-fmod :: RealFrac a => a -> a -> a
-fmod a b = a - q*b where
-  q = realToFrac (truncate $ a / b :: Integer)
-{-# INLINE fmod #-}
+-- the sign of a number, but as an Ordering so that we can pattern match over it.
+-- GT means greater than zero, etc.
+signum' :: (Ord a, Num a) => a -> Ordering
+signum' x = compare x 0
+
+-- arguments are period, range, derivative, function, and interval
+-- we require that each period of the function include precisely one local minimum and one local maximum
+periodic :: (Num a, Ord a) => a -> Interval a -> (a -> Ordering) -> (a -> a) -> Interval a -> Interval a
+periodic p r _ _ x | width x > p = r
+periodic _ r d f (I a b) = periodic' r (d a) (d b) (f a) (f b)
+
+-- arguments are global range, derivatives at endpoints, values at endpoints
+periodic' :: (Ord a) => Interval a -> Ordering -> Ordering -> a -> a -> Interval a
+periodic' r GT GT a b | a <= b = I a b -- stays in increasing zone
+                      | otherwise = r  -- goes from increasing zone, all the way through decreasing zone, and back to increasing zone
+periodic' r LT LT a b | a >= b = I b a -- stays in decreasing zone
+                      | otherwise = r  -- goes from decreasing zone, all the way through increasing zone, and back to decreasing zone
+periodic' r GT _  a b = I (min a b) (sup r) -- was going up, started going down
+periodic' r LT _  a b = I (inf r) (max a b) -- was going down, started going up
+periodic' r EQ GT a b | a < b = I a b -- stays in increasing zone
+                      | otherwise = r -- goes from increasing zone, all the way through decreasing zone, and back to increasing zone
+periodic' r EQ LT a b | a > b = I b a -- stays in decreasing zone
+                      | otherwise = r -- goes from decreasing zone, all the way through increasing zone, and back to decreasing zone
+periodic' _ _  _  a b = a ... b -- precisely begins and ends at local extremes, so it's either a singleton or whole
 
 -- | Create a non-empty interval, turning it around if necessary
 (...) :: Ord a => a -> a -> Interval a
@@ -108,6 +142,8 @@ interval a b
 --
 -- >>> whole
 -- -Infinity ... Infinity
+--
+-- prop> (x :: Double) `elem` whole
 whole :: Fractional a => Interval a
 whole = I negInfinity posInfinity
 {-# INLINE whole #-}
@@ -116,6 +152,9 @@ whole = I negInfinity posInfinity
 --
 -- >>> singleton 1
 -- 1 ... 1
+--
+-- prop> x `elem` (singleton x)
+-- prop> x /= y ==> y `notElem` (singleton x)
 singleton :: a -> Interval a
 singleton a = I a a
 {-# INLINE singleton #-}
@@ -124,6 +163,9 @@ singleton a = I a a
 --
 -- >>> inf (1 ... 20)
 -- 1
+--
+-- prop> min x y == inf (x ... y)
+-- prop> inf x <= sup x
 inf :: Interval a -> a
 inf (I a _) = a
 {-# INLINE inf #-}
@@ -132,6 +174,10 @@ inf (I a _) = a
 --
 -- >>> sup (1 ... 20)
 -- 20
+--
+-- prop> sup x `elem` x
+-- prop> max x y == sup (x ... y)
+-- prop> inf x <= sup x
 sup :: Interval a -> a
 sup (I _ b) = b
 {-# INLINE sup #-}
@@ -167,6 +213,8 @@ instance Show a => Show (Interval a) where
 --
 -- >>> width (singleton 1)
 -- 0
+--
+-- prop> 0 <= width x
 width :: Num a => Interval a -> a
 width (I a b) = b - a
 {-# INLINE width #-}
@@ -181,6 +229,8 @@ width (I a b) = b - a
 --
 -- >>> magnitude (singleton 5)
 -- 5
+--
+-- prop> 0 <= magnitude x
 magnitude :: (Num a, Ord a) => Interval a -> a
 magnitude = sup . abs
 {-# INLINE magnitude #-}
@@ -195,10 +245,18 @@ magnitude = sup . abs
 --
 -- >>> mignitude (singleton 5)
 -- 5
+--
+-- prop> 0 <= mignitude x
 mignitude :: (Num a, Ord a) => Interval a -> a
 mignitude = inf . abs
 {-# INLINE mignitude #-}
 
+-- | Num instance for intervals.
+--
+-- prop> conservative2 ((+) :: Double -> Double -> Double) (+)
+-- prop> conservative2 ((-) :: Double -> Double -> Double) (-)
+-- prop> conservative2 ((*) :: Double -> Double -> Double) (*)
+-- prop> conservative (abs :: Double -> Double) abs
 instance (Num a, Ord a) => Num (Interval a) where
   I a b + I a' b' = (a + a') ... (b + b')
   {-# INLINE (+) #-}
@@ -228,6 +286,10 @@ instance (Num a, Ord a) => Num (Interval a) where
 --
 -- >>> bisect (singleton 5.0)
 -- (5.0 ... 5.0,5.0 ... 5.0)
+--
+-- prop> let (a, b) = bisect (x :: Interval Double) in sup a == inf b
+-- prop> let (a, b) = bisect (x :: Interval Double) in inf a == inf x
+-- prop> let (a, b) = bisect (x :: Interval Double) in sup b == sup x
 bisect :: Fractional a => Interval a -> (Interval a, Interval a)
 bisect (I a b) = (I a m, I m b) where m = a + (b - a) / 2
 {-# INLINE bisect #-}
@@ -246,6 +308,8 @@ bisectIntegral (I a b)
 --
 -- >>> midpoint (singleton 5.0)
 -- 5.0
+--
+-- prop> midpoint x `elem` (x :: Interval Double)
 midpoint :: Fractional a => Interval a -> a
 midpoint (I a b) = a + (b - a) / 2
 {-# INLINE midpoint #-}
@@ -260,6 +324,9 @@ midpoint (I a b) = a + (b - a) / 2
 --
 -- >>> distance (1 ... 7) (-10 ... -2)
 -- 3
+--
+-- prop> commutative (distance :: Interval Double -> Interval Double -> Double)
+-- prop> 0 <= distance x y
 distance :: (Num a, Ord a) => Interval a -> Interval a -> a
 distance i1 i2 = mignitude (i1 - i2)
 
@@ -345,6 +412,10 @@ divZero x@(I a b)
   | otherwise        = whole
 {-# INLINE divZero #-}
 
+-- | Fractional instance for intervals.
+--
+-- prop> ys /= singleton 0 ==> conservative2 ((/) :: Double -> Double -> Double) (/) xs ys
+-- prop> xs /= singleton 0 ==> conservative (recip :: Double -> Double) recip xs
 instance (Fractional a, Ord a) => Fractional (Interval a) where
   -- TODO: check isNegativeZero properly
   x / y@(I a b)
@@ -356,8 +427,6 @@ instance (Fractional a, Ord a) => Fractional (Interval a) where
     where
       iz = a == 0
       sz = b == 0
-  recip (I a b)   = on min recip a b ... on max recip a b
-  {-# INLINE recip #-}
   fromRational r  = let r' = fromRational r in I r' r'
   {-# INLINE fromRational #-}
 
@@ -375,36 +444,47 @@ instance RealFrac a => RealFrac (Interval a) where
   truncate x = truncate (midpoint x)
   {-# INLINE truncate #-}
 
+-- | Transcendental functions for intervals.
+--
+-- prop> conservative (exp :: Double -> Double) exp
+-- prop> conservativeExceptNaN (log :: Double -> Double) log
+-- prop> conservative (sin :: Double -> Double) sin
+-- prop> conservative (cos :: Double -> Double) cos
+-- prop> conservative (tan :: Double -> Double) tan
+-- prop> conservativeExceptNaN (asin :: Double -> Double) asin
+-- prop> conservativeExceptNaN (acos :: Double -> Double) acos
+-- prop> conservative (atan :: Double -> Double) atan
+-- prop> conservative (sinh :: Double -> Double) sinh
+-- prop> conservative (cosh :: Double -> Double) cosh
+-- prop> conservative (tanh :: Double -> Double) tanh
+-- prop> conservativeExceptNaN (asinh :: Double -> Double) asinh
+-- prop> conservativeExceptNaN (acosh :: Double -> Double) acosh
+-- prop> conservativeExceptNaN (atanh :: Double -> Double) atanh
+--
+-- >>> cos (0 ... (pi + 0.1))
+-- -1.0 ... 1.0
 instance (RealFloat a, Ord a) => Floating (Interval a) where
   pi = singleton pi
   {-# INLINE pi #-}
   exp = increasing exp
   {-# INLINE exp #-}
-  log (I a b) = (if a > 0 then log a else negInfinity) ... log b
+  log (I a b) = (if a > 0 then log a else negInfinity) ... (if b > 0 then log b else negInfinity)
   {-# INLINE log #-}
-  cos x
-    | width t >= pi = (-1) ... 1
-    | inf t >= pi = - cos (t - pi)
-    | sup t <= pi = decreasing cos t
-    | sup t <= 2 * pi = (-1) ... cos ((pi * 2 - sup t) `min` inf t)
-    | otherwise = (-1) ... 1
-    where
-      t = fmod x (pi * 2)
-  {-# INLINE cos #-}
-  sin x = cos (x - pi / 2)
-  {-# INLINE sin #-}
-  tan x
-    | inf t' <= - pi / 2 || sup t' >= pi / 2 = whole
-    | otherwise = increasing tan x
-    where
-      t = x `fmod` pi
-      t' | t >= pi / 2 = t - pi
-         | otherwise    = t
-  {-# INLINE tan #-}
-  asin (I a b) = I (if a <= -1 then -halfPi else asin a) (if b >= 1 then halfPi else asin b)
-    where halfPi = pi / 2
+  sin = periodic (2 * pi) (symmetric 1) (signum' . cos)          sin
+  cos = periodic (2 * pi) (symmetric 1) (signum' . negate . sin) cos
+  tan = periodic pi       whole         (const GT)               tan -- derivative only has to have correct sign
+  asin (I a b) = (asin' a) ... (asin' b)
+    where 
+      asin' x | x >= 1 = halfPi
+              | x <= -1 = -halfPi
+              | otherwise = asin x
+      halfPi = pi / 2
   {-# INLINE asin #-}
-  acos (I a b) = I (if b >= 1 then 0 else acos b) (if a < -1 then pi else acos a)
+  acos (I a b) = (acos' a) ... (acos' b)
+    where
+      acos' x | x >= 1 = 0
+              | x <= -1 = pi
+              | otherwise = acos x
   {-# INLINE acos #-}
   atan = increasing atan
   {-# INLINE atan #-}
@@ -421,11 +501,16 @@ instance (RealFloat a, Ord a) => Floating (Interval a) where
   {-# INLINE tanh #-}
   asinh = increasing asinh
   {-# INLINE asinh #-}
-  acosh (I a b) = I lo $ acosh b
-    where lo | a <= 1 = 0
-             | otherwise = acosh a
+  acosh (I a b) = (acosh' a) ... (acosh' b)
+    where
+      acosh' x | x <= 1 = 0
+               | otherwise = acosh x
   {-# INLINE acosh #-}
-  atanh (I a b) = I (if a <= - 1 then negInfinity else atanh a) (if b >= 1 then posInfinity else atanh b)
+  atanh (I a b) = (atanh' a) ... (atanh' b)
+    where
+      atanh' x | x <= -1 = negInfinity
+               | x >= 1 = posInfinity
+               | otherwise = atanh x
   {-# INLINE atanh #-}
 
 -- | lift a monotone increasing function over a given interval
@@ -486,6 +571,9 @@ intersection x@(I a b) y@(I a' b')
 --
 -- >>> hull (15 ... 85 :: Interval Double) (0 ... 10 :: Interval Double)
 -- 0.0 ... 85.0
+--
+-- prop> conservative2 const hull
+-- prop> conservative2 (flip const) hull
 hull :: Ord a => Interval a -> Interval a -> Interval a
 hull (I a b) (I a' b') = I (min a a') (max b b')
 {-# INLINE hull #-}
@@ -651,6 +739,8 @@ possibly cmp l r
 {-# INLINE possibly #-}
 
 -- | The nearest value to that supplied which is contained in the interval.
+--
+-- prop> (clamp xs y) `elem` xs
 clamp :: Ord a => Interval a -> a -> a
 clamp (I a b) x
   | x < a     = a
@@ -664,6 +754,8 @@ clamp (I a b) x
 --
 -- >>> inflate (-2) (0 ... 4)
 -- -2 ... 6
+--
+-- prop> inflate x i `contains` i
 inflate :: (Num a, Ord a) => a -> Interval a -> Interval a
 inflate x y = symmetric x + y
 
@@ -690,6 +782,9 @@ deflate x i@(I a b) | a' <= b'  = I a' b'
 --
 -- >>> scale (-2.0) (-1.0 ... 1.0)
 -- -2.0 ... 2.0
+--
+-- prop> abs x >= 1 ==> (scale (x :: Double) i) `contains` i
+-- prop> forAll (choose (0,1)) $ \x -> abs x <= 1 ==> i `contains` (scale (x :: Double) i)
 scale :: (Fractional a, Ord a) => a -> Interval a -> Interval a
 scale x i = a ... b where
   h = x * width i / 2
@@ -704,6 +799,9 @@ scale x i = a ... b where
 --
 -- >>> symmetric (-2)
 -- -2 ... 2
+--
+-- prop> x `elem` symmetric x
+-- prop> 0 `elem` symmetric x
 symmetric :: (Num a, Ord a) => a -> Interval a
 symmetric x = negate x ... x
 
