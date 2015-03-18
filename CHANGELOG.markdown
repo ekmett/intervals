@@ -1,3 +1,7 @@
+0.7.1.1
+-------
+* Redundant import cleanup
+
 0.7.1
 -----
 * Now compatible with GHC 7.10.1-rc1
