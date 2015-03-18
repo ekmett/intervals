@@ -50,7 +50,6 @@ module Numeric.Interval.NonEmpty.Internal
 import Control.Exception as Exception
 import Data.Data
 import Data.Foldable hiding (minimum, maximum, elem, notElem)
-import Data.Function (on)
 import Data.Monoid
 #if __GLASGOW_HASKELL__ >= 704
 import GHC.Generics
