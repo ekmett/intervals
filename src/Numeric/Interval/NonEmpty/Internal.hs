@@ -59,7 +59,7 @@ import Prelude hiding (null, elem, notElem)
 
 -- $setup
 -- >>> import Test.QuickCheck.Arbitrary
--- >>> import Test.QuickCheck.Gen
+-- >>> import Test.QuickCheck.Gen hiding (scale)
 -- >>> import Test.QuickCheck.Property
 -- >>> import Control.Applicative
 -- >>> :set -XNoMonomorphismRestriction
