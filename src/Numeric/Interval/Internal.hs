@@ -126,7 +126,7 @@ whole = I negInfinity posInfinity
 --
 -- >>> empty
 -- Empty
-empty :: Ord a => Interval a
+empty :: Interval a
 empty = Empty
 {-# INLINE empty #-}
 

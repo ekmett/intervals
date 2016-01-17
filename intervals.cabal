@@ -35,6 +35,10 @@ flag test-doctests
   default: True
   manual: True
 
+flag herbie
+  default: False
+  manual: True
+
 library
   hs-source-dirs: src
 
@@ -56,6 +60,11 @@ library
 
   ghc-options:     -Wall -O2
 
+  if flag(herbie)
+    build-depends: HerbiePlugin >= 0.1 && < 0.2
+    cpp-options: -DHERBIE
+    ghc-options: -fplugin=Herbie
+
 
 test-suite doctests
   type:           exitcode-stdio-1.0
@@ -73,6 +82,3 @@ test-suite doctests
       filepath,
       QuickCheck,
       template-haskell
-
-  if impl(ghc<7.6.1)
-    ghc-options: -Werror

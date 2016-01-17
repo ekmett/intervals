@@ -296,7 +296,7 @@ inflate x y = symmetric x + y
 --
 -- >>> deflate 2.0 (-1.0 ... 1.0)
 -- 1.0 ... -1.0
-deflate :: (Fractional a, Ord a) => a -> Interval a -> Interval a
+deflate :: Fractional a => a -> Interval a -> Interval a
 deflate x (I a b) = I a' b'
   where
     a' = a + x
@@ -309,7 +309,7 @@ deflate x (I a b) = I a' b'
 --
 -- >>> scale (-2.0) (-1.0 ... 1.0)
 -- 2.0 ... -2.0
-scale :: (Fractional a, Ord a) => a -> Interval a -> Interval a
+scale :: Fractional a => a -> Interval a -> Interval a
 scale x i = I a b where
   h = x * width i / 2
   mid = midpoint i
@@ -323,7 +323,7 @@ scale x i = I a b where
 --
 -- >>> symmetric (-2)
 -- 2 ... -2
-symmetric :: (Num a, Ord a) => a -> Interval a
+symmetric :: Num a => a -> Interval a
 symmetric x = negate x ... x
 
 instance (Num a, Ord a) => Num (Interval a) where

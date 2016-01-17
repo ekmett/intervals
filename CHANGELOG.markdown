@@ -1,3 +1,9 @@
+0.7.2
+-----
+* Redundant constraint cleanup
+* GHC 8 support
+* Added a flag for building with 'herbie'
+
 0.7.1.1
 -------
 * Redundant import cleanup
