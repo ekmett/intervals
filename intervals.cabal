@@ -1,5 +1,5 @@
 name:              intervals
-version:           0.7.1.1
+version:           0.7.2
 synopsis:          Interval Arithmetic
 description:
   A 'Numeric.Interval.Interval' is a closed, convex set of floating point values.
@@ -17,7 +17,7 @@ maintainer:         ekmett@gmail.com
 category:           Math
 build-type:         Custom
 cabal-version:      >=1.8
-tested-with:        GHC == 7.4.2, GHC == 7.6.1, GHC == 7.6.3, GHC == 7.8.4, GHC == 7.10
+tested-with:        GHC == 7.4.2, GHC == 7.6.1, GHC == 7.6.3, GHC == 7.8.4, GHC == 7.10, GHC == 8.0.1
 extra-source-files:
   .travis.yml
   CHANGELOG.markdown
