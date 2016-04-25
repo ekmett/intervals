@@ -13,7 +13,7 @@
 -- Stability   :  experimental
 -- Portability :  DeriveDataTypeable
 --
--- "Directed" Interval arithmetic
+-- \"Directed\" Interval arithmetic
 --
 -----------------------------------------------------------------------------
 
