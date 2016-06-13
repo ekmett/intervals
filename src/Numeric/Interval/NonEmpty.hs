@@ -32,6 +32,7 @@ module Numeric.Interval.NonEmpty
   , midpoint
   , distance
   , intersection
+  , union
   , hull
   , bisect
   , bisectIntegral

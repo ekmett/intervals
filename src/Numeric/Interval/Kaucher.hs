@@ -33,6 +33,7 @@ module Numeric.Interval.Kaucher
   , width
   , midpoint
   , intersection
+  , union
   , hull
   , bisect
   , magnitude
@@ -627,7 +628,20 @@ intersection x@(I a b) y@(I a' b')
   | otherwise = max a a' ... min b b'
 {-# INLINE intersection #-}
 
--- | Calculate the convex hull of two intervals
+-- | Calculate the union of two intervals.
+--
+-- >>> union (0 ... 10 :: Interval Double) (5 ... 15 :: Interval Double)
+-- 0.0 ... 15.0
+--
+-- >>> union (15 ... 85 :: Interval Double) (0 ... 10 :: Interval Double)
+-- NaN ... NaN
+union :: (Fractional a, Ord a) => Interval a -> Interval a -> Interval a
+union x y
+  | x /=! y = empty
+  | otherwise = hull x y
+{-# INLINE union #-}
+
+-- | Calculate the convex hull of two intervals.
 --
 -- >>> hull (0 ... 10 :: Interval Double) (5 ... 15 :: Interval Double)
 -- 0.0 ... 15.0
