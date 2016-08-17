@@ -23,6 +23,8 @@ module Numeric.Interval.NonEmpty
   , interval
   , whole
   , singleton
+  , member
+  , notMember
   , elem
   , notElem
   , inf

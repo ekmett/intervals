@@ -26,6 +26,8 @@ module Numeric.Interval.Internal
   , empty
   , null
   , singleton
+  , member
+  , notMember
   , elem
   , notElem
   , inf
@@ -400,6 +402,44 @@ midpoint Empty = Exception.throw EmptyInterval
 
 -- | Determine if a point is in the interval.
 --
+-- >>> member 3.2 (1.0 ... 5.0)
+-- True
+--
+-- >>> member 5 (1.0 ... 5.0)
+-- True
+--
+-- >>> member 1 (1.0 ... 5.0)
+-- True
+--
+-- >>> member 8 (1.0 ... 5.0)
+-- False
+--
+-- >>> member 5 empty
+-- False
+--
+member :: Ord a => a -> Interval a -> Bool
+member x (I a b) = x >= a && x <= b
+member _ Empty = False
+{-# INLINE member #-}
+
+-- | Determine if a point is not included in the interval
+--
+-- >>> notMember 8 (1.0 ... 5.0)
+-- True
+--
+-- >>> notMember 1.4 (1.0 ... 5.0)
+-- False
+--
+-- And of course, nothing is a member of the empty interval.
+--
+-- >>> notMember 5 empty
+-- True
+notMember :: Ord a => a -> Interval a -> Bool
+notMember x xs = not (member x xs)
+{-# INLINE notMember #-}
+
+-- | Determine if a point is in the interval.
+--
 -- >>> elem 3.2 (1.0 ... 5.0)
 -- True
 --
@@ -416,9 +456,9 @@ midpoint Empty = Exception.throw EmptyInterval
 -- False
 --
 elem :: Ord a => a -> Interval a -> Bool
-elem x (I a b) = x >= a && x <= b
-elem _ Empty = False
+elem = member
 {-# INLINE elem #-}
+{-# DEPRECATED elem "Use `member` instead." #-}
 
 -- | Determine if a point is not included in the interval
 --
@@ -433,8 +473,9 @@ elem _ Empty = False
 -- >>> notElem 5 empty
 -- True
 notElem :: Ord a => a -> Interval a -> Bool
-notElem x xs = not (elem x xs)
+notElem = notMember
 {-# INLINE notElem #-}
+{-# DEPRECATED notElem "Use `notMember` instead." #-}
 
 -- | 'realToFrac' will use the midpoint
 instance Real a => Real (Interval a) where

@@ -18,6 +18,8 @@ module Numeric.Interval
   , empty
   , null
   , singleton
+  , member
+  , notMember
   , elem
   , notElem
   , inf
