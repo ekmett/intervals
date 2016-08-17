@@ -22,6 +22,8 @@ module Numeric.Interval.NonEmpty.Internal
   , interval
   , whole
   , singleton
+  , member
+  , notMember
   , elem
   , notElem
   , inf
@@ -331,6 +333,34 @@ distance i1 i2 = mignitude (i1 - i2)
 
 -- | Determine if a point is in the interval.
 --
+-- >>> member 3.2 (1.0 ... 5.0)
+-- True
+--
+-- >>> member 5 (1.0 ... 5.0)
+-- True
+--
+-- >>> member 1 (1.0 ... 5.0)
+-- True
+--
+-- >>> member 8 (1.0 ... 5.0)
+-- False
+member :: Ord a => a -> Interval a -> Bool
+member x (I a b) = x >= a && x <= b
+{-# INLINE member #-}
+
+-- | Determine if a point is not included in the interval
+--
+-- >>> notMember 8 (1.0 ... 5.0)
+-- True
+--
+-- >>> notMember 1.4 (1.0 ... 5.0)
+-- False
+notMember :: Ord a => a -> Interval a -> Bool
+notMember x xs = not (member x xs)
+{-# INLINE notMember #-}
+
+-- | Determine if a point is in the interval.
+--
 -- >>> elem 3.2 (1.0 ... 5.0)
 -- True
 --
@@ -343,8 +373,9 @@ distance i1 i2 = mignitude (i1 - i2)
 -- >>> elem 8 (1.0 ... 5.0)
 -- False
 elem :: Ord a => a -> Interval a -> Bool
-elem x (I a b) = x >= a && x <= b
+elem = member
 {-# INLINE elem #-}
+{-# DEPRECATED elem "Use `member` instead." #-}
 
 -- | Determine if a point is not included in the interval
 --
@@ -354,8 +385,9 @@ elem x (I a b) = x >= a && x <= b
 -- >>> notElem 1.4 (1.0 ... 5.0)
 -- False
 notElem :: Ord a => a -> Interval a -> Bool
-notElem x xs = not (elem x xs)
+notElem = notMember
 {-# INLINE notElem #-}
+{-# DEPRECATED notElem "Use `notMember` instead." #-}
 
 -- | 'realToFrac' will use the midpoint
 instance Real a => Real (Interval a) where
