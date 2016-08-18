@@ -396,6 +396,10 @@ midpoint x = inf x + (sup x - inf x) / 2
 --
 -- >>> member 8 (1.0 ... 5.0)
 -- False
+--
+-- >>> member 5 empty
+-- False
+--
 member :: Ord a => a -> Interval a -> Bool
 member x (I a b) = x >= a && x <= b
 {-# INLINE member #-}
@@ -407,6 +411,11 @@ member x (I a b) = x >= a && x <= b
 --
 -- >>> notMember 1.4 (1.0 ... 5.0)
 -- False
+--
+-- And of course, nothing is a member of the empty interval.
+--
+-- >>> notMember 5 empty
+-- True
 notMember :: Ord a => a -> Interval a -> Bool
 notMember x xs = not (member x xs)
 {-# INLINE notMember #-}
@@ -424,6 +433,10 @@ notMember x xs = not (member x xs)
 --
 -- >>> elem 8 (1.0 ... 5.0)
 -- False
+--
+-- >>> elem 5 empty
+-- False
+--
 elem :: Ord a => a -> Interval a -> Bool
 elem = member
 {-# INLINE elem #-}
@@ -436,6 +449,11 @@ elem = member
 --
 -- >>> notElem 1.4 (1.0 ... 5.0)
 -- False
+--
+-- And of course, nothing is a member of the empty interval.
+--
+-- >>> notElem 5 empty
+-- True
 notElem :: Ord a => a -> Interval a -> Bool
 notElem = notMember
 {-# INLINE notElem #-}
