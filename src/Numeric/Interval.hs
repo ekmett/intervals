@@ -42,6 +42,10 @@ module Numeric.Interval
   , possibly, (<?), (<=?), (==?), (>=?), (>?)
   , idouble
   , ifloat
+  , iquot
+  , irem
+  , idiv
+  , imod
   ) where
 
 import Numeric.Interval.Internal

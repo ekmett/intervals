@@ -48,6 +48,10 @@ module Numeric.Interval.NonEmpty
   , scale, symmetric
   , idouble
   , ifloat
+  , iquot
+  , irem
+  , idiv
+  , imod
   ) where
 
 import Numeric.Interval.NonEmpty.Internal

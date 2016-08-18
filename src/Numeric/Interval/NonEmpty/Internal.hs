@@ -47,6 +47,10 @@ module Numeric.Interval.NonEmpty.Internal
   , scale, symmetric
   , idouble
   , ifloat
+  , iquot
+  , irem
+  , idiv
+  , imod
   ) where
 
 import Control.Exception as Exception
@@ -854,3 +858,30 @@ ifloat = id
 -- sin 1 :: Interval Double
 
 default (Integer,Double)
+
+-- | The set of all x `quot` y
+iquot :: Integral a => Interval a -> Interval a -> Interval a
+iquot (I l u) (I l' u') =
+  if l' <= 0 && 0 <= u' then throw DivideByZero else I
+    (minimum [a `quot` b | a <- [l,u], b <- [l',u']])
+    (maximum [a `quot` b | a <- [l,u], b <- [l',u']])
+
+-- | The set of all x `rem` y
+irem :: Integral a => Interval a -> Interval a -> Interval a
+irem (I l u) (I l' u') =
+  if l' <= 0 && 0 <= u' then throw DivideByZero else I
+    (minimum [0, signum l * (abs u' - 1), signum l * (abs l' - 1)])
+    (maximum [0, signum u * (abs u' - 1), signum u * (abs l' - 1)])
+
+-- | the set of all x `div` y
+idiv :: Integral a => Interval a -> Interval a -> Interval a
+idiv (I l u) (I l' u') =
+  if l' <= 0 && 0 <= u' then throw DivideByZero else I
+    (min (l `Prelude.div` max 1 l') (u `Prelude.div` min (-1) u'))
+    (max (u `Prelude.div` max 1 l') (l `Prelude.div` min (-1) u'))
+
+-- | the set of all x `mod` y
+imod :: Integral a => Interval a -> Interval a -> Interval a
+imod _ (I l' u') =
+  if l' <= 0 && 0 <= u' then throw DivideByZero else
+    I (min (l'+1) 0) (max 0 (u'-1))
