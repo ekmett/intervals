@@ -932,7 +932,11 @@ ifloat = id
 
 default (Integer,Double)
 
--- | The set of all x `quot` y
+-- | an interval containing all x `quot` y
+-- >>> (5 `quot` 3) `member` ((4...6) `iquot` (2...4))
+-- True
+-- >>> (1...10) `iquot` ((-5)...4)
+-- *** Exception: divide by zero
 iquot :: Integral a => Interval a -> Interval a -> Interval a
 iquot i j = case (i,j) of
   (Empty,_) -> Empty
@@ -942,7 +946,11 @@ iquot i j = case (i,j) of
       (minimum [a `quot` b | a <- [l,u], b <- [l',u']])
       (maximum [a `quot` b | a <- [l,u], b <- [l',u']])
 
--- | The set of all x `rem` y
+-- | an interval containing all x `rem` y
+-- >>> (5 `rem` 3) `member` ((4...6) `irem` (2...4))
+-- True
+-- >>> (1...10) `irem` ((-5)...4)
+-- *** Exception: divide by zero
 irem :: Integral a => Interval a -> Interval a -> Interval a
 irem i j = case (i,j) of
   (Empty,_) -> Empty
@@ -952,7 +960,11 @@ irem i j = case (i,j) of
       (minimum [0, signum l * (abs u' - 1), signum l * (abs l' - 1)])
       (maximum [0, signum u * (abs u' - 1), signum u * (abs l' - 1)])
 
--- | the set of all x `div` y
+-- | an interval containing all x `div` y
+-- >>> (5 `div` 3) `member` ((4...6) `idiv` (2...4))
+-- True
+-- >>> (1...10) `idiv` ((-5)...4)
+-- *** Exception: divide by zero
 idiv :: Integral a => Interval a -> Interval a -> Interval a
 idiv i j = case (i,j) of
   (Empty,_) -> Empty
@@ -962,7 +974,11 @@ idiv i j = case (i,j) of
       (min (l `Prelude.div` max 1 l') (u `Prelude.div` min (-1) u'))
       (max (u `Prelude.div` max 1 l') (l `Prelude.div` min (-1) u'))
 
--- | the set of all x `mod` y
+-- | an interval containing all x `mod` y
+-- >>> (5 `mod` 3) `member` ((4...6) `imod` (2...4))
+-- True
+-- >>> (1...10) `imod` ((-5)...4)
+-- *** Exception: divide by zero
 imod :: Integral a => Interval a -> Interval a -> Interval a
 imod i j = case (i,j) of
   (Empty,_) -> Empty

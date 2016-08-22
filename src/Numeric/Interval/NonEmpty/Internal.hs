@@ -72,10 +72,10 @@ import Prelude hiding (null, elem, notElem)
 -- >>> :set -XExtendedDefaultRules
 -- >>> default (Integer,Double)
 -- >>> instance (Ord a, Arbitrary a) => Arbitrary (Interval a) where arbitrary = (...) <$> arbitrary <*> arbitrary
--- >>> let elementOf xs = sized $ \n -> case n of { 0 -> pure $ inf xs; 1 -> pure $ sup xs; _ -> choose (inf xs, sup xs); }
--- >>> let conservative sf f xs = forAll (choose (inf xs, sup xs)) $ \x -> (sf x) `elem` (f xs)
--- >>> let conservative2 sf f xs ys = forAll ((,) <$> choose (inf xs, sup xs) <*> choose (inf ys, sup ys)) $ \(x,y) -> (sf x y) `elem` (f xs ys)
--- >>> let conservativeExceptNaN sf f xs = forAll (choose (inf xs, sup xs)) $ \x -> isNaN (sf x) || (sf x) `elem` (f xs)
+-- >>> let memberOf xs = sized $ \n -> case n of { 0 -> pure $ inf xs; 1 -> pure $ sup xs; _ -> choose (inf xs, sup xs); }
+-- >>> let conservative sf f xs = forAll (choose (inf xs, sup xs)) $ \x -> (sf x) `member` (f xs)
+-- >>> let conservative2 sf f xs ys = forAll ((,) <$> choose (inf xs, sup xs) <*> choose (inf ys, sup ys)) $ \(x,y) -> (sf x y) `member` (f xs ys)
+-- >>> let conservativeExceptNaN sf f xs = forAll (choose (inf xs, sup xs)) $ \x -> isNaN (sf x) || (sf x) `member` (f xs)
 -- >>> let compose2 = fmap . fmap
 -- >>> let commutative op a b = (a `op` b) == (b `op` a)
 
@@ -859,28 +859,36 @@ ifloat = id
 
 default (Integer,Double)
 
--- | The set of all x `quot` y
+-- | an interval containing all x `quot` y
+-- prop> forAll (memberOf xs) $ \ x -> forAll (memberOf ys) $ \ y -> 0 `notMember` ys ==> (x `quot` y) `member` (xs `iquot` ys)
+-- prop> 0 `member` ys ==> ioProperty $ do z <- try (evaluate (xs `iquot` ys)); return $ z === Left DivideByZero
 iquot :: Integral a => Interval a -> Interval a -> Interval a
 iquot (I l u) (I l' u') =
   if l' <= 0 && 0 <= u' then throw DivideByZero else I
     (minimum [a `quot` b | a <- [l,u], b <- [l',u']])
     (maximum [a `quot` b | a <- [l,u], b <- [l',u']])
 
--- | The set of all x `rem` y
+-- | an interval containing all x `rem` y
+-- prop> forAll (memberOf xs) $ \ x -> forAll (memberOf ys) $ \ y -> 0 `notMember` ys ==> (x `rem` y) `member` (xs `irem` ys)
+-- prop> 0 `member` ys ==> ioProperty $ do z <- try (evaluate (xs `irem` ys)); return $ z === Left DivideByZero
 irem :: Integral a => Interval a -> Interval a -> Interval a
 irem (I l u) (I l' u') =
   if l' <= 0 && 0 <= u' then throw DivideByZero else I
     (minimum [0, signum l * (abs u' - 1), signum l * (abs l' - 1)])
     (maximum [0, signum u * (abs u' - 1), signum u * (abs l' - 1)])
 
--- | the set of all x `div` y
+-- | an interval containing all x `div` y
+-- prop> forAll (memberOf xs) $ \ x -> forAll (memberOf ys) $ \ y -> 0 `notMember` ys ==> (x `div` y) `member` (xs `idiv` ys)
+-- prop> 0 `member` ys ==> ioProperty $ do z <- try (evaluate (xs `idiv` ys)); return $ z === Left DivideByZero
 idiv :: Integral a => Interval a -> Interval a -> Interval a
 idiv (I l u) (I l' u') =
   if l' <= 0 && 0 <= u' then throw DivideByZero else I
     (min (l `Prelude.div` max 1 l') (u `Prelude.div` min (-1) u'))
     (max (u `Prelude.div` max 1 l') (l `Prelude.div` min (-1) u'))
 
--- | the set of all x `mod` y
+-- | an interval containing all x `mod` y
+-- prop> forAll (memberOf xs) $ \ x -> forAll (memberOf ys) $ \ y -> 0 `notMember` ys ==> (x `mod` y) `member` (xs `imod` ys)
+-- prop> 0 `member` ys ==> ioProperty $ do z <- try (evaluate (xs `imod` ys)); return $ z === Left DivideByZero
 imod :: Integral a => Interval a -> Interval a -> Interval a
 imod _ (I l' u') =
   if l' <= 0 && 0 <= u' then throw DivideByZero else
