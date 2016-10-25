@@ -70,7 +70,8 @@ import Prelude hiding (null, elem, notElem)
 -- $setup
 
 data Interval a = I !a !a deriving
-  ( Data
+  ( Eq, Ord
+  , Data
   , Typeable
 #if __GLASGOW_HASKELL__ >= 704
   , Generic
@@ -206,10 +207,6 @@ sup (I _ b) = b
 singular :: Ord a => Interval a -> Bool
 singular x = not (null x) && inf x == sup x
 {-# INLINE singular #-}
-
-instance Eq a => Eq (Interval a) where
-  (==) = (==!)
-  {-# INLINE (==) #-}
 
 instance Show a => Show (Interval a) where
   showsPrec n (I a b) =
@@ -423,20 +420,6 @@ instance Real a => Real (Interval a) where
       a = toRational (inf x)
       b = toRational (sup x)
   {-# INLINE toRational #-}
-
-instance Ord a => Ord (Interval a) where
-  compare x y
-    | sup x < inf y = LT
-    | inf x > sup y = GT
-    | sup x == inf y && inf x == sup y = EQ
-    | otherwise = Exception.throw AmbiguousComparison
-  {-# INLINE compare #-}
-
-  max (I a b) (I a' b') = max a a' ... max b b'
-  {-# INLINE max #-}
-
-  min (I a b) (I a' b') = min a a' ... min b b'
-  {-# INLINE min #-}
 
 -- @'divNonZero' X Y@ assumes @0 `'notElem'` Y@
 divNonZero :: (Fractional a, Ord a) => Interval a -> Interval a -> Interval a
