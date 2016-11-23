@@ -297,7 +297,7 @@ inflate x y = symmetric x + y
 --
 -- >>> deflate 1.0 empty
 -- Empty
-deflate :: (Fractional a, Ord a) => a -> Interval a -> Interval a
+deflate :: (Num a, Ord a) => a -> Interval a -> Interval a
 deflate _ Empty               = Empty
 deflate x (I a b) | a' <= b'  = I a' b'
                   | otherwise = Empty
