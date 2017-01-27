@@ -25,6 +25,8 @@ module Numeric.Interval.Kaucher
   , empty
   , null
   , singleton
+  , member
+  , notMember
   , elem
   , notElem
   , inf
@@ -47,6 +49,10 @@ module Numeric.Interval.Kaucher
   , clamp
   , idouble
   , ifloat
+  , iquot
+  , irem
+  , idiv
+  , imod
   ) where
 
 import Control.Applicative hiding (empty)
@@ -379,6 +385,43 @@ midpoint x = inf x + (sup x - inf x) / 2
 
 -- | Determine if a point is in the interval.
 --
+-- >>> member 3.2 (1.0 ... 5.0)
+-- True
+--
+-- >>> member 5 (1.0 ... 5.0)
+-- True
+--
+-- >>> member 1 (1.0 ... 5.0)
+-- True
+--
+-- >>> member 8 (1.0 ... 5.0)
+-- False
+--
+-- >>> member 5 empty
+-- False
+--
+member :: Ord a => a -> Interval a -> Bool
+member x (I a b) = x >= a && x <= b
+{-# INLINE member #-}
+
+-- | Determine if a point is not included in the interval
+--
+-- >>> notMember 8 (1.0 ... 5.0)
+-- True
+--
+-- >>> notMember 1.4 (1.0 ... 5.0)
+-- False
+--
+-- And of course, nothing is a member of the empty interval.
+--
+-- >>> notMember 5 empty
+-- True
+notMember :: Ord a => a -> Interval a -> Bool
+notMember x xs = not (member x xs)
+{-# INLINE notMember #-}
+
+-- | Determine if a point is in the interval.
+--
 -- >>> elem 3.2 (1.0 ... 5.0)
 -- True
 --
@@ -395,8 +438,9 @@ midpoint x = inf x + (sup x - inf x) / 2
 -- False
 --
 elem :: Ord a => a -> Interval a -> Bool
-elem x xs = x >= inf xs && x <= sup xs
+elem = member
 {-# INLINE elem #-}
+{-# DEPRECATED elem "Use `member` instead." #-}
 
 -- | Determine if a point is not included in the interval
 --
@@ -411,8 +455,9 @@ elem x xs = x >= inf xs && x <= sup xs
 -- >>> notElem 5 empty
 -- True
 notElem :: Ord a => a -> Interval a -> Bool
-notElem x xs = not (elem x xs)
+notElem = notMember
 {-# INLINE notElem #-}
+{-# DEPRECATED notElem "Use `notMember` instead." #-}
 
 -- | 'realToFrac' will use the midpoint
 instance Real a => Real (Interval a) where
@@ -829,3 +874,46 @@ ifloat = id
 
 
 default (Integer,Double)
+
+-- | an interval containing all x `quot` y
+-- >>> (5 `quot` 3) `member` ((4...6) `iquot` (2...4))
+-- True
+-- >>> (1...10) `iquot` ((-5)...4)
+-- *** Exception: divide by zero
+iquot :: Integral a => Interval a -> Interval a -> Interval a
+iquot (I l u) (I l' u') =
+  if l' <= 0 && 0 <= u' then throw DivideByZero else I
+    (minimum [a `quot` b | a <- [l,u], b <- [l',u']])
+    (maximum [a `quot` b | a <- [l,u], b <- [l',u']])
+
+-- | an interval containing all x `rem` y
+-- >>> (5 `rem` 3) `member` ((4...6) `irem` (2...4))
+-- True
+-- >>> (1...10) `irem` ((-5)...4)
+-- *** Exception: divide by zero
+irem :: Integral a => Interval a -> Interval a -> Interval a
+irem (I l u) (I l' u') =
+  if l' <= 0 && 0 <= u' then throw DivideByZero else I
+    (minimum [0, signum l * (abs u' - 1), signum l * (abs l' - 1)])
+    (maximum [0, signum u * (abs u' - 1), signum u * (abs l' - 1)])
+
+-- | an interval containing all x `div` y
+-- >>> (5 `div` 3) `member` ((4...6) `idiv` (2...4))
+-- True
+-- >>> (1...10) `idiv` ((-5)...4)
+-- *** Exception: divide by zero
+idiv :: Integral a => Interval a -> Interval a -> Interval a
+idiv (I l u) (I l' u') =
+  if l' <= 0 && 0 <= u' then throw DivideByZero else I
+    (min (l `Prelude.div` max 1 l') (u `Prelude.div` min (-1) u'))
+    (max (u `Prelude.div` max 1 l') (l `Prelude.div` min (-1) u'))
+
+-- | an interval containing all x `mod` y
+-- >>> (5 `mod` 3) `member` ((4...6) `imod` (2...4))
+-- True
+-- >>> (1...10) `imod` ((-5)...4)
+-- *** Exception: divide by zero
+imod :: Integral a => Interval a -> Interval a -> Interval a
+imod _ (I l' u') =
+  if l' <= 0 && 0 <= u' then throw DivideByZero else
+    I (min (l'+1) 0) (max 0 (u'-1))
