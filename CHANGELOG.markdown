@@ -1,3 +1,8 @@
+0.8
+---
+
+* `Eq` and `Ord` instances are now structural
+
 0.7.2
 -----
 * Redundant constraint cleanup
