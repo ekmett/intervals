@@ -58,8 +58,9 @@ import Data.Data
 #if __GLASGOW_HASKELL__ >= 704
 import GHC.Generics
 #endif
-import Numeric.Interval.Exception
 import Prelude hiding (null, elem, notElem)
+
+import qualified Data.Semigroup
 
 -- $setup
 -- >>> import Test.QuickCheck.Arbitrary
@@ -88,6 +89,10 @@ data Interval a = I !a !a deriving
 #endif
 #endif
   )
+
+-- | 'Data.Semigroup.<>' is 'hull'
+instance Ord a => Data.Semigroup.Semigroup (Interval a) where
+  (<>) = hull
 
 infix 3 ...
 

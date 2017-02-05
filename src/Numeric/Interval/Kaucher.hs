@@ -65,13 +65,15 @@ import Data.Foldable hiding (minimum, maximum, elem, notElem
 #endif
   )
 import Data.Function (on)
-import Data.Monoid
 import Data.Traversable
 #if __GLASGOW_HASKELL__ >= 704
 import GHC.Generics
 #endif
 import Numeric.Interval.Exception
 import Prelude hiding (null, elem, notElem)
+
+import qualified Data.Semigroup
+import qualified Data.Monoid
 
 -- $setup
 
@@ -87,12 +89,16 @@ data Interval a = I !a !a deriving
 #endif
   )
 
+-- | 'Data.Semigroup.<>' is 'hull'
+instance Ord a => Data.Semigroup.Semigroup (Interval a) where
+  (<>) = hull
+
 instance Functor Interval where
   fmap f (I a b) = I (f a) (f b)
   {-# INLINE fmap #-}
 
 instance Foldable Interval where
-  foldMap f (I a b) = f a `mappend` f b
+  foldMap f (I a b) = f a `Data.Monoid.mappend` f b
   {-# INLINE foldMap #-}
 
 instance Traversable Interval where
@@ -662,6 +668,10 @@ intersection x@(I a b) y@(I a' b')
 --
 -- >>> hull (15 ... 85 :: Interval Double) (0 ... 10 :: Interval Double)
 -- 0.0 ... 85.0
+--
+-- >>> hull (10 ... 20 :: Interval Double) (15 ... 0 :: Interval Double)
+-- 10.0 ... 20.0
+--
 hull :: Ord a => Interval a -> Interval a -> Interval a
 hull x@(I a b) y@(I a' b')
   | null x = y

@@ -65,6 +65,9 @@ import GHC.Generics
 import Numeric.Interval.Exception
 import Prelude hiding (null, elem, notElem)
 
+import qualified Data.Semigroup
+import qualified Data.Monoid
+
 -- $setup
 
 data Interval a = I !a !a | Empty deriving
@@ -78,6 +81,14 @@ data Interval a = I !a !a | Empty deriving
 #endif
 #endif
   )
+
+-- | 'Data.Semigroup.<>' is 'hull'
+instance Ord a => Data.Semigroup.Semigroup (Interval a) where
+  (<>) = hull
+
+instance Ord a => Data.Monoid.Monoid (Interval a) where
+  mempty = empty
+  mappend = (Data.Semigroup.<>)
 
 infix 3 ...
 infixl 6 +/-
