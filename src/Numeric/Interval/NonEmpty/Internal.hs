@@ -91,6 +91,10 @@ data Interval a = I !a !a deriving
 #endif
   )
 
+instance Functor Interval where
+  fmap f (I a b) = I (f a) (f b)
+  {-# INLINE fmap #-}
+
 instance Foldable Interval where
   foldMap f (I a b) = f a `mappend` f b
   {-# INLINE foldMap #-}
