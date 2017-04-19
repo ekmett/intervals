@@ -28,6 +28,7 @@ module Numeric.Interval
   , width
   , midpoint
   , intersection
+  , union
   , hull
   , bisect
   , bisectIntegral

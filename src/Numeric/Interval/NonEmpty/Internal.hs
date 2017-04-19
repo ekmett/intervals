@@ -33,6 +33,7 @@ module Numeric.Interval.NonEmpty.Internal
   , midpoint
   , distance
   , intersection
+  , union
   , hull
   , bisect
   , bisectIntegral
@@ -492,7 +493,7 @@ instance (RealFloat a, Ord a) => Floating (Interval a) where
   cos = periodic (2 * pi) (symmetric 1) (signum' . negate . sin) cos
   tan = periodic pi       whole         (const GT)               tan -- derivative only has to have correct sign
   asin (I a b) = (asin' a) ... (asin' b)
-    where 
+    where
       asin' x | x >= 1 = halfPi
               | x <= -1 = -halfPi
               | otherwise = asin x
@@ -582,7 +583,20 @@ intersection x@(I a b) y@(I a' b')
   | otherwise = Just $ I (max a a') (min b b')
 {-# INLINE intersection #-}
 
--- | Calculate the convex hull of two intervals
+-- | Calculate the union of two intervals.
+--
+-- >>> union (0 ... 10 :: Interval Double) (5 ... 15 :: Interval Double)
+-- Just (0.0 ... 15.0)
+--
+-- >>> union (15 ... 85 :: Interval Double) (0 ... 10 :: Interval Double)
+-- Nothing
+union :: Ord a => Interval a -> Interval a -> Maybe (Interval a)
+union x y
+  | x /=! y   = Nothing
+  | otherwise = Just (hull x y)
+{-# INLINE union #-}
+
+-- | Calculate the convex hull of two intervals.
 --
 -- >>> hull (0 ... 10 :: Interval Double) (5 ... 15 :: Interval Double)
 -- 0.0 ... 15.0
