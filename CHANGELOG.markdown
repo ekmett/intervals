@@ -1,6 +1,9 @@
 0.8
 ---
 * `Eq` and `Ord` instances are now structural
+* Deprecate `elem` and `notElem` in favor of `member` and `nonMember`
+* Add `iquot`, `irem`, `idiv`, and `imod` functions
+* Relax `Fractional` constraint in `deflate` to `Num`
 * Revamp `Setup.hs` to use `cabal-doctest`. This makes it build
   with `Cabal-2.0`, and makes the `doctest`s work with `cabal new-build` and
   sandboxes.
