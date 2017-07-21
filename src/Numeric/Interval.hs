@@ -46,7 +46,11 @@ module Numeric.Interval
   , irem
   , idiv
   , imod
+  , intersections
+  , unions
+  , differences
   ) where
 
 import Numeric.Interval.Internal
+import Numeric.Interval.Boolean
 import Prelude ()
