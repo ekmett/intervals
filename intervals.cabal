@@ -1,5 +1,5 @@
 name:              intervals
-version:           0.8
+version:           0.8.1
 synopsis:          Interval Arithmetic
 description:
   A 'Numeric.Interval.Interval' is a closed, convex set of floating point values.
