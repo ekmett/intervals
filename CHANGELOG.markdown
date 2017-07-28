@@ -1,3 +1,7 @@
+next
+----
+* Support `doctest-0.12`
+
 0.8
 ---
 * `Eq` and `Ord` instances are now structural
