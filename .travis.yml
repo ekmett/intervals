@@ -74,6 +74,7 @@ matrix:
 
 before_install:
   - HC=${CC}
+  - HCVER=${HC/ghc-/}
   - HCPKG=${HC/ghc/ghc-pkg}
   - unset CC
   - ROOTDIR=$(pwd)
@@ -86,7 +87,12 @@ install:
   - cabal --version
   - echo "$(${HC} --version) [$(${HC} --print-project-git-commit-id 2> /dev/null || echo '?')]"
   - BENCH=${BENCH---enable-benchmarks}
-  - TEST=${TEST---enable-tests}
+  - |
+    if dpkg --compare-versions "${HCVER}" ge "7.6"; then
+      TEST=${TEST---enable-tests}
+    else
+      TEST=${TEST---disable-tests}
+    fi
   - HADDOCK=${HADDOCK-true}
   - INSTALLED=${INSTALLED-true}
   - GHCHEAD=${GHCHEAD-false}
