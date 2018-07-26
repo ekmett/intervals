@@ -55,8 +55,6 @@ module Numeric.Interval.NonEmpty.Internal
 
 import Control.Exception as Exception
 import Data.Data
-import Data.Foldable hiding (minimum, maximum, elem, notElem)
-import Data.Monoid
 #if __GLASGOW_HASKELL__ >= 704
 import GHC.Generics
 #endif
@@ -90,10 +88,6 @@ data Interval a = I !a !a deriving
 #endif
 #endif
   )
-
-instance Foldable Interval where
-  foldMap f (I a b) = f a `mappend` f b
-  {-# INLINE foldMap #-}
 
 infix 3 ...
 
