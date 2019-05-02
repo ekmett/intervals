@@ -1,3 +1,8 @@
+0.9 [????.??.??]
+----------------
+* Remove the `Foldable` instances for the `Interval` types from
+  `Numeric.Interval` and `Numeric.Interval.NonEmpty`.
+
 0.8.1
 -----
 * Support `doctest-0.12`
