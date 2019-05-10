@@ -1,4 +1,4 @@
-0.9 [????.??.??]
+0.9 [2019.05.10]
 ----------------
 * Remove the `Foldable` instances for the `Interval` types from
   `Numeric.Interval` and `Numeric.Interval.NonEmpty`.
