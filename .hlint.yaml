@@ -1,0 +1,12 @@
+- arguments: [--cpp-define=HLINT, --cpp-ansi]
+
+# not viable
+- ignore: {name: Reduce duplication}
+
+# don't want to!
+- ignore: {name: Use infix}
+
+# these don't consider the corner cases when using doubles
+- ignore: {name: "Use >"}
+- ignore: {name: "Use <="}
+- ignore: {name: "Use >="}
