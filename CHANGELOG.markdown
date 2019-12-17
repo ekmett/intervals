@@ -1,3 +1,9 @@
+next [????.??.??]
+-----------------
+* Add `Semigroup` instances for the `Interval` types in `Numeric.Interval`,
+  `Numeric.Interval.Kaucher`, and `Numeric.Interval.NonEmpty`.
+  Add a `Monoid` instance for the `Interval` type in `Numeric.Interval`.
+
 0.9 [2019.05.10]
 ----------------
 * Remove the `Foldable` instances for the `Interval` types from
