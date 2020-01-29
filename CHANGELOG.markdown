@@ -1,5 +1,5 @@
-next [????.??.??]
------------------
+0.9.1 [2020.01.29]
+------------------
 * Add `Semigroup` instances for the `Interval` types in `Numeric.Interval`,
   `Numeric.Interval.Kaucher`, and `Numeric.Interval.NonEmpty`.
   Add a `Monoid` instance for the `Interval` type in `Numeric.Interval`.
