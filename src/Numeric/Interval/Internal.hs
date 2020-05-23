@@ -567,6 +567,7 @@ instance (RealFloat a, Ord a) => Floating (Interval a) where
   cos x
     | width t >= pi = (-1) ... 1
     | inf t >= pi = - cos (t - pi)
+    | inf t < 0 = - cos (t + pi)
     | sup t <= pi = decreasing cos t
     | sup t <= 2 * pi = (-1) ... cos ((pi * 2 - sup t) `min` inf t)
     | otherwise = (-1) ... 1
