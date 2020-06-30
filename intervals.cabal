@@ -16,7 +16,7 @@ author:             Edward Kmett
 maintainer:         ekmett@gmail.com
 category:           Math
 build-type:         Custom
-cabal-version:      >=1.8
+cabal-version:      >=1.10
 tested-with:        GHC == 7.0.4
                   , GHC == 7.2.2
                   , GHC == 7.4.2
@@ -86,12 +86,14 @@ library
     cpp-options: -DHERBIE
     ghc-options: -fplugin=Herbie
 
+  default-language: Haskell2010
 
 test-suite doctests
   type:           exitcode-stdio-1.0
   main-is:        doctests.hs
   ghc-options:    -Wall -threaded
   hs-source-dirs: tests
+  default-language: Haskell2010
 
   if !flag(test-doctests) || !impl(ghc >= 7.6)
     buildable: False
