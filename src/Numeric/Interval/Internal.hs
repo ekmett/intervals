@@ -46,8 +46,8 @@ module Numeric.Interval.Internal
   , scale, symmetric
   , contains
   , isSubsetOf
-  , certainly, (<!), (<=!), (==!), (>=!), (>!)
-  , possibly, (<?), (<=?), (==?), (>=?), (>?)
+  , certainly, (<!), (<=!), (==!), (/=!), (>=!), (>!)
+  , possibly, (<?), (<=?), (==?), (/=?), (>=?), (>?)
   , idouble
   , ifloat
   , iquot
