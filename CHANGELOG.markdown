@@ -1,3 +1,7 @@
+next [yyyy.mm.dd]
+-----------------
+* Export `(/=!)` and `(/=?)` operators.
+
 0.9.1 [2020.01.29]
 ------------------
 * Add `Semigroup` instances for the `Interval` types in `Numeric.Interval`,

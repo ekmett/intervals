@@ -44,8 +44,8 @@ module Numeric.Interval.Kaucher
   , scale, symmetric
   , contains
   , isSubsetOf
-  , certainly, (<!), (<=!), (==!), (>=!), (>!)
-  , possibly, (<?), (<=?), (==?), (>=?), (>?)
+  , certainly, (<!), (<=!), (==!), (/=!), (>=!), (>!)
+  , possibly, (<?), (<=?), (==?), (/=?), (>=?), (>?)
   , clamp
   , idouble
   , ifloat

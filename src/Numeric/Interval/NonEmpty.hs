@@ -41,8 +41,8 @@ module Numeric.Interval.NonEmpty
   , mignitude
   , contains
   , isSubsetOf
-  , certainly, (<!), (<=!), (==!), (>=!), (>!)
-  , possibly, (<?), (<=?), (==?), (>=?), (>?)
+  , certainly, (<!), (<=!), (==!), (/=!), (>=!), (>!)
+  , possibly, (<?), (<=?), (==?), (/=?), (>=?), (>?)
   , clamp
   , inflate, deflate
   , scale, symmetric
