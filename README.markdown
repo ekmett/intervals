@@ -1,7 +1,7 @@
 intervals
 ==========
 
-[![Hackage](https://img.shields.io/hackage/v/intervals.svg)](https://hackage.haskell.org/package/intervals) [![Build Status](https://secure.travis-ci.org/ekmett/intervals.svg?branch=master)](http://travis-ci.org/ekmett/intervals)
+[![Hackage](https://img.shields.io/hackage/v/intervals.svg)](https://hackage.haskell.org/package/intervals) [![Build Status](https://github.com/ekmett/intervals/workflows/Haskell-CI/badge.svg)](https://github.com/ekmett/intervals/actions?query=workflow%3AHaskell-CI)
 
 Basic interval arithmetic
 
