@@ -76,6 +76,11 @@ import qualified Data.Semigroup
 import qualified Data.Monoid
 
 -- $setup
+-- -- Eta expansion needed for GHC-7.6
+-- >>> :set -fno-warn-deprecations
+-- >>> let null xs = Numeric.Interval.Kaucher.null xs
+-- >>> let elem x xs = Numeric.Interval.Kaucher.elem x xs
+-- >>> let notElem x xs = Numeric.Interval.Kaucher.notElem x xs
 
 data Interval a = I !a !a deriving
   ( Eq, Ord
