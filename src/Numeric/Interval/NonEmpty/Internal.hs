@@ -67,6 +67,7 @@ import qualified Data.Semigroup
 -- >>> import Test.QuickCheck.Gen hiding (scale)
 -- >>> import Test.QuickCheck.Property
 -- >>> import Control.Applicative
+-- >>> import Control.Exception
 -- >>> :set -XNoMonomorphismRestriction
 -- >>> :set -XExtendedDefaultRules
 -- >>> default (Integer,Double)
@@ -77,6 +78,11 @@ import qualified Data.Semigroup
 -- >>> let conservativeExceptNaN sf f xs = forAll (choose (inf xs, sup xs)) $ \x -> isNaN (sf x) || (sf x) `member` (f xs)
 -- >>> let compose2 = fmap . fmap
 -- >>> let commutative op a b = (a `op` b) == (b `op` a)
+--
+-- -- Eta expansion needed for GHC-7.6
+-- >>> :set -fno-warn-deprecations
+-- >>> let elem x xs = Numeric.Interval.NonEmpty.Internal.elem x xs
+-- >>> let notElem x xs = Numeric.Interval.NonEmpty.Internal.notElem x xs
 
 data Interval a = I !a !a deriving
   ( Eq, Ord
@@ -491,7 +497,7 @@ instance (RealFloat a, Ord a) => Floating (Interval a) where
   cos = periodic (2 * pi) (symmetric 1) (signum' . negate . sin) cos
   tan = periodic pi       whole         (const GT)               tan -- derivative only has to have correct sign
   asin (I a b) = (asin' a) ... (asin' b)
-    where 
+    where
       asin' x | x >= 1 = halfPi
               | x <= -1 = -halfPi
               | otherwise = asin x

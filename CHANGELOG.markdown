@@ -1,6 +1,10 @@
 next [yyyy.mm.dd]
 -----------------
 * Export `(/=!)` and `(/=?)` operators.
+* The build-type has been changed from `Custom` to `Simple`.
+  To achieve this, the `doctests` test suite has been removed in favor of using
+  [`cabal-docspec`](https://github.com/phadej/cabal-extras/tree/master/cabal-docspec)
+  to run the doctests.
 
 0.9.1 [2020.01.29]
 ------------------

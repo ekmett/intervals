@@ -15,7 +15,7 @@ license-file:       LICENSE
 author:             Edward Kmett
 maintainer:         ekmett@gmail.com
 category:           Math
-build-type:         Custom
+build-type:         Simple
 cabal-version:      >=1.10
 tested-with:        GHC == 7.0.4
                   , GHC == 7.2.2
@@ -33,24 +33,10 @@ extra-source-files:
   .hlint.yaml
   CHANGELOG.markdown
   README.markdown
-  Warning.hs
 
 source-repository head
   type: git
   location: git://github.com/ekmett/intervals.git
-
-custom-setup
-  setup-depends:
-    base >= 4 && <5,
-    Cabal,
-    cabal-doctest >= 1 && <1.1
-
--- You can disable the doctests test suite with -f-test-doctests
-flag test-doctests
-  description: Enable (or disable via f-test-doctests) the doctest suite when
-               using the enable-tests option for cabal.
-  default: True
-  manual: True
 
 flag herbie
   default: False
@@ -86,22 +72,13 @@ library
     ghc-options: -fplugin=Herbie
 
   default-language: Haskell2010
+  x-docspec-options: --check-properties
+  x-docspec-property-variables: i x y xs ys
 
 test-suite doctests
   type:           exitcode-stdio-1.0
   main-is:        doctests.hs
   ghc-options:    -Wall -threaded
   hs-source-dirs: tests
+  build-depends:  base, QuickCheck >=2.14.2
   default-language: Haskell2010
-
-  if !flag(test-doctests) || !impl(ghc >= 7.6)
-    buildable: False
-  else
-    build-depends:
-      base           >= 4.6,
-      directory      >= 1.0,
-      doctest        >= 0.11.1 && < 0.18,
-      filepath,
-      intervals,
-      QuickCheck,
-      template-haskell
