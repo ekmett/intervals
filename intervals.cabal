@@ -49,6 +49,7 @@ library
     Numeric.Interval
     Numeric.Interval.Exception
     Numeric.Interval.Internal
+    Numeric.Interval.Boolean
     Numeric.Interval.Kaucher
     Numeric.Interval.NonEmpty
     Numeric.Interval.NonEmpty.Internal
