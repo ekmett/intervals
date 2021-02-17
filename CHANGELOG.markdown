@@ -1,5 +1,5 @@
-next [yyyy.mm.dd]
------------------
+0.9.2 [2021.02.17]
+------------------
 * Export `(/=!)` and `(/=?)` operators.
 * The build-type has been changed from `Custom` to `Simple`.
   To achieve this, the `doctests` test suite has been removed in favor of using
