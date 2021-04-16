@@ -117,8 +117,10 @@ instance Applicative Interval where
   {-# INLINE (<*>) #-}
 
 instance Monad Interval where
+#if !(MIN_VERSION_base(4,11,0))
   return a = I a a
   {-# INLINE return #-}
+#endif
   I a b >>= f = I a' b' where
     I a' _ = f a
     I _ b' = f b
