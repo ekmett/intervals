@@ -534,8 +534,8 @@ instance (Fractional a, Ord a) => Fractional (Interval a) where
   x / y@(I a b)
     | 0 `notElem` y = divNonZero x y
     | iz && sz  = Exception.throw DivideByZero
-    | iz        = divPositive x a
-    |       sz  = divNegative x b
+    | iz        = divPositive x b
+    |       sz  = divNegative x a
     | otherwise = divZero x
     where
       iz = a == 0
@@ -572,6 +572,7 @@ instance (RealFloat a, Ord a) => Floating (Interval a) where
   cos x
     | width t >= pi = (-1) ... 1
     | inf t >= pi = - cos (t - pi)
+    | inf t < 0 = - cos (t + pi)
     | sup t <= pi = decreasing cos t
     | sup t <= 2 * pi = (-1) ... cos ((pi * 2 - sup t) `min` inf t)
     | otherwise = (-1) ... 1
