@@ -1,9 +1,6 @@
-{-# LANGUAGE CPP #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE DeriveDataTypeable #-}
-#if __GLASGOW_HASKELL__ >= 704
 {-# LANGUAGE DeriveGeneric #-}
-#endif
 -----------------------------------------------------------------------------
 -- |
 -- Module      :  Numeric.Interval.NonEmpty

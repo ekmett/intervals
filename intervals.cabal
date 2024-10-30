@@ -17,20 +17,18 @@ maintainer:         ekmett@gmail.com
 category:           Math
 build-type:         Simple
 cabal-version:      >=1.10
-tested-with:        GHC == 7.0.4
-                  , GHC == 7.2.2
-                  , GHC == 7.4.2
-                  , GHC == 7.6.3
-                  , GHC == 7.8.4
-                  , GHC == 7.10.3
-                  , GHC == 8.0.2
+tested-with:        GHC == 8.0.2
                   , GHC == 8.2.2
                   , GHC == 8.4.4
                   , GHC == 8.6.5
                   , GHC == 8.8.4
                   , GHC == 8.10.7
                   , GHC == 9.0.2
-                  , GHC == 9.2.2
+                  , GHC == 9.2.8
+                  , GHC == 9.4.8
+                  , GHC == 9.6.6
+                  , GHC == 9.8.2
+                  , GHC == 9.10.1
 extra-source-files:
   .hlint.yaml
   CHANGELOG.markdown
@@ -57,14 +55,9 @@ library
 
   build-depends:
     array          >= 0.3   && < 0.6,
-    base           >= 4     && < 5,
-    distributive   >= 0.2   && < 1
-
-  if impl(ghc >=7.4)
-    build-depends: ghc-prim
-
-  if !impl(ghc >=8.0)
-    build-depends: semigroups >=0.11 && <1
+    base           >= 4.9   && < 5,
+    distributive   >= 0.2   && < 1,
+    ghc-prim
 
   ghc-options:     -Wall -O2
 
@@ -82,5 +75,6 @@ test-suite doctests
   main-is:        doctests.hs
   ghc-options:    -Wall -threaded
   hs-source-dirs: tests
-  build-depends:  base, QuickCheck >=2.14.2
+  build-depends:  base >= 4.9 && < 5
+                , QuickCheck >=2.14.2
   default-language: Haskell2010

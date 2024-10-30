@@ -1,3 +1,7 @@
+next [????.??.??]
+-----------------
+* Drop support for pre-8.0 versions of GHC.
+
 0.9.2 [2021.02.17]
 ------------------
 * Export `(/=!)` and `(/=?)` operators.

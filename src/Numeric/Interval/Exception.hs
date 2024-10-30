@@ -8,7 +8,7 @@ import Control.Exception
 import Data.Data
 
 data EmptyInterval = EmptyInterval
-  deriving (Eq,Ord,Typeable,Data)
+  deriving (Eq,Ord,Data)
 
 instance Show EmptyInterval where
   show EmptyInterval = "empty interval"
@@ -16,7 +16,7 @@ instance Show EmptyInterval where
 instance Exception EmptyInterval
 
 data AmbiguousComparison = AmbiguousComparison
-  deriving (Eq,Ord,Typeable,Data)
+  deriving (Eq,Ord,Data)
 
 instance Show AmbiguousComparison where
   show AmbiguousComparison = "ambiguous comparison"

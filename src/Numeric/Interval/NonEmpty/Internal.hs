@@ -1,9 +1,7 @@
 {-# LANGUAGE CPP #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE DeriveDataTypeable #-}
-#if __GLASGOW_HASKELL__ >= 704
 {-# LANGUAGE DeriveGeneric #-}
-#endif
 {-# OPTIONS_HADDOCK not-home #-}
 -----------------------------------------------------------------------------
 -- |
@@ -55,9 +53,7 @@ module Numeric.Interval.NonEmpty.Internal
 
 import Control.Exception as Exception
 import Data.Data
-#if __GLASGOW_HASKELL__ >= 704
 import GHC.Generics
-#endif
 import Prelude hiding (null, elem, notElem)
 
 import qualified Data.Semigroup
@@ -79,22 +75,12 @@ import qualified Data.Semigroup
 -- >>> let compose2 = fmap . fmap
 -- >>> let commutative op a b = (a `op` b) == (b `op` a)
 --
--- -- Eta expansion needed for GHC-7.6
--- >>> :set -fno-warn-deprecations
--- >>> let elem x xs = Numeric.Interval.NonEmpty.Internal.elem x xs
--- >>> let notElem x xs = Numeric.Interval.NonEmpty.Internal.notElem x xs
+-- >>> :set -Wno-deprecations
+-- >>> let elem = Numeric.Interval.NonEmpty.Internal.elem
+-- >>> let notElem = Numeric.Interval.NonEmpty.Internal.notElem
 
 data Interval a = I !a !a deriving
-  ( Eq, Ord
-  , Data
-  , Typeable
-#if __GLASGOW_HASKELL__ >= 704
-  , Generic
-#if __GLASGOW_HASKELL__ >= 706
-  , Generic1
-#endif
-#endif
-  )
+  (Eq, Ord, Data, Generic, Generic1)
 
 -- | 'Data.Semigroup.<>' is 'hull'
 instance Ord a => Data.Semigroup.Semigroup (Interval a) where
