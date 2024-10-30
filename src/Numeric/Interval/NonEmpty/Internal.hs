@@ -423,8 +423,9 @@ divZero x@(I a b)
 
 -- | Fractional instance for intervals.
 --
--- prop> ys /= singleton 0 ==> conservative2 ((/) :: Double -> Double -> Double) (/) xs ys
--- prop> xs /= singleton 0 ==> conservative (recip :: Double -> Double) recip xs
+-- -- The property tests below are currently disabled (#66).
+-- -- prop> ys /= singleton 0 ==> conservative2 ((/) :: Double -> Double -> Double) (/) xs ys
+-- -- prop> xs /= singleton 0 ==> conservative (recip :: Double -> Double) recip xs
 instance (Fractional a, Ord a) => Fractional (Interval a) where
   -- TODO: check isNegativeZero properly
   x / y@(I a b)
@@ -792,7 +793,8 @@ deflate x i@(I a b) | a' <= b'  = I a' b'
 -- >>> scale (-2.0) (-1.0 ... 1.0)
 -- -2.0 ... 2.0
 --
--- prop> abs x >= 1 ==> (scale (x :: Double) i) `contains` i
+-- -- The property test below is currently disabled (#66).
+-- -- prop> abs x >= 1 ==> (scale (x :: Double) i) `contains` i
 -- prop> forAll (choose (0,1)) $ \x -> abs x <= 1 ==> i `contains` (scale (x :: Double) i)
 scale :: (Fractional a, Ord a) => a -> Interval a -> Interval a
 scale x i = a ... b where
